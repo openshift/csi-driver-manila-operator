@@ -4,16 +4,14 @@ import (
 	"context"
 
 	manilacsiv1alpha1 "github.com/Fedosin/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	storagev1beta1 "k8s.io/api/storage/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -56,10 +54,9 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		&storagev1beta1.CSIDriver{},
 	}
 
-
 	ownerHandler := &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:   &manilacsiv1alpha1.ManilaCSI{},
+		OwnerType:    &manilacsiv1alpha1.ManilaCSI{},
 	}
 
 	for _, watchObject := range watchOwnedObjects {
@@ -85,9 +82,6 @@ type ReconcileManilaCSI struct {
 
 // Reconcile reads that state of the cluster for a ManilaCSI object and makes changes based on the state read
 // and what is in the ManilaCSI.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
-// Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Result, error) {
@@ -105,57 +99,47 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
+		reqLogger.Error(err, "Failed to get %v: %v", request.NamespacedName, err)
 		return reconcile.Result{}, err
 	}
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
-
-	// Set ManilaCSI instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
-	return reconcile.Result{}, nil
+	// Manage objects created by the operator
+	return r.handleManilaCSIDeployment(instance, reqLogger)
 }
 
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *manilacsiv1alpha1.ManilaCSI) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
+// Manage the Objects created by the Operator.
+func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) (reconcile.Result, error) {
+	reqLogger.Info("Reconciling ManilaCSI Deployment Objects")
+
+	// csi-nodeplugin-nfsplugin DaemonSet
+	err := r.handleNFSNodePluginDaemonSet(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
-		},
+
+	// csi-nodeplugin-manilaplugin DaemonSet
+	err = r.handleManilaNodePluginDaemonSet(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
+
+	// csi-controllerplugin-manilaplugin StatefulSet
+	err = r.handleManilaControllerPluginStatefulSet(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// csi-controllerplugin-manilaplugin Service
+	err = r.handleManilaControllerPluginService(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// CSIDriver
+	err = r.handleManilaCSIDriver(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
 }
