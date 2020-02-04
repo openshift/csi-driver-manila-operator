@@ -4,7 +4,9 @@ import (
 	"context"
 
 	manilacsiv1alpha1 "github.com/Fedosin/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	storagev1beta1 "k8s.io/api/storage/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -20,11 +22,6 @@ import (
 )
 
 var log = logf.Log.WithName("controller_manilacsi")
-
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
 
 // Add creates a new ManilaCSI Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -51,14 +48,25 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner ManilaCSI
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	// Watch owned objects
+	watchOwnedObjects := []runtime.Object{
+		&appsv1.StatefulSet{},
+		&appsv1.DaemonSet{},
+		&corev1.Service{},
+		&storagev1beta1.CSIDriver{},
+	}
+
+
+	ownerHandler := &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &manilacsiv1alpha1.ManilaCSI{},
-	})
-	if err != nil {
-		return err
+		OwnerType:   &manilacsiv1alpha1.ManilaCSI{},
+	}
+
+	for _, watchObject := range watchOwnedObjects {
+		err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
