@@ -26,7 +26,8 @@ func (r *ReconcileManilaCSI) handleManilaCSIDriver(instance *manilacsiv1alpha1.M
 	// Define a new CSIDriver object
 	driver := &storagev1beta1.CSIDriver{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "manila.csi.openstack.org",
+			Name:      "manila.csi.openstack.org",
+			Namespace: "default",
 		},
 		Spec: storagev1beta1.CSIDriverSpec{
 			AttachRequired: falsePTR(),

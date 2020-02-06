@@ -17,6 +17,7 @@ var (
 apiVersion: apps/v1
 metadata:
   name: csi-nodeplugin-nfsplugin
+  namespace: default
 spec:
   selector:
     matchLabels:

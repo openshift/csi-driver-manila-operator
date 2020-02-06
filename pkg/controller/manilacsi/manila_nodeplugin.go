@@ -17,6 +17,7 @@ var (
 apiVersion: apps/v1
 metadata:
   name: openstack-manila-csi-nodeplugin
+  namespace: default
   labels:
     app: openstack-manila-csi
     component: nodeplugin
