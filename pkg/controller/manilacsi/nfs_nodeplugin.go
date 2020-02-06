@@ -10,7 +10,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var (
@@ -70,11 +69,6 @@ func (r *ReconcileManilaCSI) handleNFSNodePluginDaemonSet(instance *manilacsiv1a
 
 	dec := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(nfsNodePluginManifest)), 1000)
 	if err := dec.Decode(&ds); err != nil {
-		return err
-	}
-
-	// Set ManilaCSI instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, ds, r.scheme); err != nil {
 		return err
 	}
 
