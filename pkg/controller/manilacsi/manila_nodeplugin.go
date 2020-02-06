@@ -111,7 +111,9 @@ spec:
 )
 
 func (r *ReconcileManilaCSI) handleManilaNodePluginDaemonSet(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
-	// Define a new Pod object
+	reqLogger.Info("Reconciling Manila Node Plugin DaemonSet")
+
+	// Define a new DaemonSet object
 	ds := &appsv1.DaemonSet{}
 
 	dec := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(manilaNodePluginManifest)), 1000)

@@ -32,6 +32,8 @@ spec:
 )
 
 func (r *ReconcileManilaCSI) handleManilaControllerPluginService(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+	reqLogger.Info("Reconciling Manila Controller Plugin Service")
+
 	// Define a new Service object
 	srv := &corev1.Service{}
 

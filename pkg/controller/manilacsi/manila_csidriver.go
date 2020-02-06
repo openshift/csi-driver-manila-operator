@@ -21,6 +21,8 @@ func falsePTR() *bool {
 }
 
 func (r *ReconcileManilaCSI) handleManilaCSIDriver(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+	reqLogger.Info("Reconciling Manila CSIDriver")
+
 	// Define a new CSIDriver object
 	driver := &storagev1beta1.CSIDriver{
 		ObjectMeta: metav1.ObjectMeta{

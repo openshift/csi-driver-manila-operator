@@ -113,7 +113,9 @@ spec:
 )
 
 func (r *ReconcileManilaCSI) handleManilaControllerPluginStatefulSet(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
-	// Define a new Pod object
+	reqLogger.Info("Reconciling Manila Controller Plugin StatefulSet")
+
+	// Define a new StatefulSet object
 	ss := &appsv1.StatefulSet{}
 
 	dec := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(manilaControllerPluginManifest)), 1000)

@@ -63,7 +63,9 @@ spec:
 )
 
 func (r *ReconcileManilaCSI) handleNFSNodePluginDaemonSet(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
-	// Define a new Pod object
+	reqLogger.Info("Reconciling NFS Node Plugin DaemonSet")
+
+	// Define a new DaemonSet object
 	ds := &appsv1.DaemonSet{}
 
 	dec := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(nfsNodePluginManifest)), 1000)
