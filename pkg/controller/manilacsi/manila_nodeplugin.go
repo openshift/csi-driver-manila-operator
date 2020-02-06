@@ -67,7 +67,7 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: "manila-csi-plugin:latest"
+          image: "quay.io/openshift/origin-csi-driver-manila:latest"
           args:
             - "--v=5"
             - "--nodeid=$(NODE_ID)"
