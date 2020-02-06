@@ -1,46 +1,45 @@
 package manilacsi
 
 import (
-	"bytes"
 	"context"
 
 	manilacsiv1alpha1 "github.com/Fedosin/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-)
-
-var (
-	manilaServiceManifest = `kind: Service
-apiVersion: v1
-metadata:
-	name: openstack-manila-csi-controllerplugin
-	namespace: default
-	labels:
-	app: openstack-manila-csi
-	component: controllerplugin
-spec:
-	selector:
-	app: openstack-manila-csi
-	component: controllerplugin
-	ports:
-	- name: dummy
-		port: 12345
-`
 )
 
 func (r *ReconcileManilaCSI) handleManilaControllerPluginService(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Controller Plugin Service")
 
-	// Define a new Service object
-	srv := &corev1.Service{}
+	var labels = map[string]string{
+		"app":       "openstack-manila-csi",
+		"component": "controllerplugin",
+	}
 
-	dec := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(manilaNodePluginManifest)), 1000)
-	if err := dec.Decode(&srv); err != nil {
-		return err
+	// Define a new Service object
+	srv := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "openstack-manila-csi-controllerplugin",
+			Namespace: "default",
+			Labels:    labels,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name: "dummy",
+					Port: int32(12345),
+				},
+			},
+			Selector: labels,
+		},
 	}
 
 	// Set ManilaCSI instance as the owner and controller
