@@ -117,14 +117,8 @@ func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alph
 		return reconcile.Result{}, err
 	}
 
-	// csi-nodeplugin-manilaplugin DaemonSet
-	err = r.handleManilaNodePluginDaemonSet(instance, reqLogger)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// csi-controllerplugin-manilaplugin StatefulSet
-	err = r.handleManilaControllerPluginStatefulSet(instance, reqLogger)
+	// CSIDriver
+	err = r.handleManilaCSIDriver(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -135,8 +129,14 @@ func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alph
 		return reconcile.Result{}, err
 	}
 
-	// CSIDriver
-	err = r.handleManilaCSIDriver(instance, reqLogger)
+	// csi-controllerplugin-manilaplugin StatefulSet
+	err = r.handleManilaControllerPluginStatefulSet(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// csi-nodeplugin-manilaplugin DaemonSet
+	err = r.handleManilaNodePluginDaemonSet(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
