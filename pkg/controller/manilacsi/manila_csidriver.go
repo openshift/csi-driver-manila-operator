@@ -9,7 +9,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // falsePTR returns a *bool whose underlying value is false.
@@ -24,8 +23,7 @@ func (r *ReconcileManilaCSI) handleManilaCSIDriver(instance *manilacsiv1alpha1.M
 	// Define a new CSIDriver object
 	driver := &storagev1beta1.CSIDriver{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "manila.csi.openstack.org",
-			Namespace: "default",
+			Name: "manila.csi.openstack.org",
 		},
 		Spec: storagev1beta1.CSIDriverSpec{
 			AttachRequired: falsePTR(),
@@ -33,16 +31,11 @@ func (r *ReconcileManilaCSI) handleManilaCSIDriver(instance *manilacsiv1alpha1.M
 		},
 	}
 
-	// Set ManilaCSI instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, driver, r.scheme); err != nil {
-		return err
-	}
-
-	// Check if this Service already exists
+	// Check if this CSIDriver already exists
 	found := &storagev1beta1.CSIDriver{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: driver.Name, Namespace: driver.Namespace}, found)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: driver.Name, Namespace: ""}, found)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new CSIDriver", "CSIDriver.Namespace", driver.Namespace, "CSIDriver.Name", driver.Name)
+		reqLogger.Info("Creating a new CSIDriver", "CSIDriver.Name", driver.Name)
 		err = r.client.Create(context.TODO(), driver)
 		if err != nil {
 			return err
