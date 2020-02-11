@@ -1,7 +1,6 @@
 package manilacsi
 
 import (
-	"bytes"
 	"context"
 
 	manilacsiv1alpha1 "github.com/Fedosin/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
@@ -10,7 +9,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -33,11 +31,6 @@ func (r *ReconcileManilaCSI) handleManilaCSIDriver(instance *manilacsiv1alpha1.M
 			AttachRequired: falsePTR(),
 			PodInfoOnMount: falsePTR(),
 		},
-	}
-
-	dec := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(manilaNodePluginManifest)), 1000)
-	if err := dec.Decode(&driver); err != nil {
-		return err
 	}
 
 	// Set ManilaCSI instance as the owner and controller
