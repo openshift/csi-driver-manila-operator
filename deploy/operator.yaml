@@ -16,7 +16,7 @@ spec:
       containers:
         - name: csi-driver-manila-operator
           # Replace this with the built image name
-          image: REPLACE_IMAGE
+          image: quay.io/fedosin/csi-driver-manila-operator:latest
           command:
           - csi-driver-manila-operator
           imagePullPolicy: Always
