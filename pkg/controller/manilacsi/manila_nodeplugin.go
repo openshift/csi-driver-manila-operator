@@ -37,7 +37,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: registrar
-          image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0"
+          image: "quay.io/openshift/origin-csi-node-driver-registrar:latest"
           args:
             - "--v=5"
             - "--csi-address=/csi/csi.sock"
