@@ -71,7 +71,7 @@ func generateNFSNodePluginManifest() *appsv1.DaemonSet {
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  "nfs",
+							Name: "nfs",
 							// TODO(mfedosin): start using the downstream image when
 							// it is available.
 							Image: "quay.io/k8scsi/nfsplugin:canary",

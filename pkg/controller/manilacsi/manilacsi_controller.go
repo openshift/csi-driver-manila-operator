@@ -7,6 +7,7 @@ import (
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	storagev1beta1 "k8s.io/api/storage/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -52,6 +53,9 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		&appsv1.DaemonSet{},
 		&corev1.Service{},
 		&storagev1beta1.CSIDriver{},
+		&corev1.ServiceAccount{},
+		&rbacv1.ClusterRole{},
+		&rbacv1.ClusterRoleBinding{},
 	}
 
 	ownerHandler := &handler.EnqueueRequestForOwner{
@@ -111,8 +115,14 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) (reconcile.Result, error) {
 	reqLogger.Info("Reconciling ManilaCSI Deployment Objects")
 
-	// csi-nodeplugin-nfsplugin DaemonSet
-	err := r.handleNFSNodePluginDaemonSet(instance, reqLogger)
+	// NFS Node Plugin RBAC
+	err := r.handleNFSNodePluginRBAC(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// NFS Node Plugin DaemonSet
+	err = r.handleNFSNodePluginDaemonSet(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

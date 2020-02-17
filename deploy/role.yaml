@@ -98,16 +98,54 @@ rules:
   - update
   - watch
 - apiGroups:
-  - rbac.authorization.k8s.io
+  - ""
   resources:
-  - clusterrole
-  - clusterrolebindings
-  - role
-  - rolebindings
   - serviceaccounts
   verbs:
-  - get
   - create
   - delete
-  - patch
+  - get
+  - watch
+  - list
   - update
+  - patch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  - clusterrolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - watch
+  - list
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+    - get
+    - list
+    - update
+    - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+    - get
+    - list
+    - update
+    - watch
+- apiGroups:
+  - "storage.k8s.io"
+  resources:
+  - volumeattachments
+  verbs:
+    - get
+    - list
+    - update
+    - watch
