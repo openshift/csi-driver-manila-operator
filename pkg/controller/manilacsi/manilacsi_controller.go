@@ -145,7 +145,13 @@ func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alph
 		return reconcile.Result{}, err
 	}
 
-	// csi-nodeplugin-manilaplugin DaemonSet
+	// Manila Node Plugin RBAC
+	err = r.handleManilaNodePluginRBAC(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Manila Node Plugin DaemonSet
 	err = r.handleManilaNodePluginDaemonSet(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
