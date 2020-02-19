@@ -35,7 +35,7 @@ func (r *ReconcileManilaCSI) handleManilaNodePluginRBAC(instance *manilacsiv1alp
 	}
 
 	// Manila Node Plugin Cluster Role Binding
-	err = r.handleManilaNodePluginClusterRole(instance, reqLogger)
+	err = r.handleManilaNodePluginClusterRoleBinding(instance, reqLogger)
 	if err != nil {
 		return err
 	}

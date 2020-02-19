@@ -28,7 +28,7 @@ func (r *ReconcileManilaCSI) handleNFSNodePluginRBAC(instance *manilacsiv1alpha1
 	}
 
 	// NFS Node Plugin Cluster Role Binding
-	err = r.handleNFSNodePluginClusterRole(instance, reqLogger)
+	err = r.handleNFSNodePluginClusterRoleBinding(instance, reqLogger)
 	if err != nil {
 		return err
 	}
