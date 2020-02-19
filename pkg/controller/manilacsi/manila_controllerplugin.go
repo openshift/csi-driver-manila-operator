@@ -1,128 +1,23 @@
 package manilacsi
 
 import (
-	"bytes"
 	"context"
 
 	manilacsiv1alpha1 "github.com/Fedosin/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-)
-
-var (
-	manilaControllerPluginManifest = `kind: StatefulSet
-apiVersion: apps/v1
-metadata:
-  name: openstack-manila-csi-controllerplugin
-  namespace: default
-  labels:
-    app: openstack-manila-csi
-    component: controllerplugin
-spec:
-  serviceName: openstack-manila-csi-controllerplugin
-  replicas: 1
-  selector:
-    matchLabels:
-      app: openstack-manila-csi
-      component: controllerplugin
-  template:
-    metadata:
-      labels:
-        app: openstack-manila-csi
-        component: controllerplugin
-    spec:
-      serviceAccountName: openstack-manila-csi-controllerplugin
-      containers:
-        - name: provisioner
-          image: "quay.io/openshift/origin-csi-external-provisioner:latest"
-          args:
-            - "--v=5"
-            - "--csi-address=$(ADDRESS)"
-          env:
-            - name: ADDRESS
-              value: "unix:///var/lib/kubelet/plugins/manila.csi.openstack.org/csi-controllerplugin.sock"
-          imagePullPolicy: IfNotPresent
-          volumeMounts:
-            - name: plugin-dir
-              mountPath: /var/lib/kubelet/plugins/manila.csi.openstack.org
-        - name: snapshotter
-          image: "quay.io/openshift/origin-csi-external-snapshotter:latest"
-          args:
-            - "--v=5"
-            - "--csi-address=$(ADDRESS)"
-          env:
-            - name: ADDRESS
-              value: "unix:///var/lib/kubelet/plugins/manila.csi.openstack.org/csi-controllerplugin.sock"
-          imagePullPolicy: IfNotPresent
-          volumeMounts:
-            - name: plugin-dir
-              mountPath: /var/lib/kubelet/plugins/manila.csi.openstack.org
-        - name: nodeplugin
-          securityContext:
-            privileged: true
-            capabilities:
-              add: ["SYS_ADMIN"]
-            allowPrivilegeEscalation: true
-          image: "quay.io/openshift/origin-csi-driver-manila:latest"
-          args:
-            - "--v=5"
-            - "--nodeid=$(NODE_ID)"
-            - "--endpoint=$(CSI_ENDPOINT)"
-            - "--drivername=$(DRIVER_NAME)"
-            - "--share-protocol-selector=$(MANILA_SHARE_PROTO)"
-            - "--fwdendpoint=$(FWD_CSI_ENDPOINT)"
-          env:
-            - name: DRIVER_NAME
-              value: manila.csi.openstack.org
-            - name: NODE_ID
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-            - name: CSI_ENDPOINT
-              value: "unix:///var/lib/kubelet/plugins/manila.csi.openstack.org/csi-controllerplugin.sock"
-            - name: FWD_CSI_ENDPOINT
-              value: "unix:///var/lib/kubelet/plugins/csi-nfsplugin/csi.sock"
-            - name: MANILA_SHARE_PROTO
-              value: "NFS"
-          imagePullPolicy: IfNotPresent
-          volumeMounts:
-            - name: plugin-dir
-              mountPath: /var/lib/kubelet/plugins/manila.csi.openstack.org
-            - name: fwd-plugin-dir
-              mountPath: /var/lib/kubelet/plugins/csi-nfsplugin
-            - name: pod-mounts
-              mountPath: /var/lib/kubelet/pods
-              mountPropagation: Bidirectional
-      volumes:
-        - name: plugin-dir
-          hostPath:
-            path: /var/lib/kubelet/plugins/manila.csi.openstack.org
-            type: DirectoryOrCreate
-        - name: fwd-plugin-dir
-          hostPath:
-            path: /var/lib/kubelet/plugins/csi-nfsplugin
-            type: Directory
-        - name: pod-mounts
-          hostPath:
-            path: /var/lib/kubelet/pods
-            type: Directory
-`
 )
 
 func (r *ReconcileManilaCSI) handleManilaControllerPluginStatefulSet(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Controller Plugin StatefulSet")
 
 	// Define a new StatefulSet object
-	ss := &appsv1.StatefulSet{}
-
-	dec := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(manilaControllerPluginManifest)), 1000)
-	if err := dec.Decode(&ss); err != nil {
-		return err
-	}
+	ss := generateManilaControllerPluginStatefulSet()
 
 	// Set ManilaCSI instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, ss, r.scheme); err != nil {
@@ -148,4 +43,180 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginStatefulSet(instance *m
 	// DaemonSet already exists - don't requeue
 	reqLogger.Info("Skip reconcile: StatefulSet already exists", "StatefulSet.Namespace", found.Namespace, "StatefulSet.Name", found.Name)
 	return nil
+}
+
+func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
+	trueVar := true
+	replicaNumber := int32(1)
+	mountPropagationBidirectional := corev1.MountPropagationBidirectional
+	hostPathDirectoryOrCreate := corev1.HostPathDirectoryOrCreate
+	hostPathDirectory := corev1.HostPathDirectory
+
+	labels := map[string]string{
+		"app":       "openstack-manila-csi",
+		"component": "controllerplugin",
+	}
+
+	return &appsv1.StatefulSet{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "StatefulSet",
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "openstack-manila-csi-controllerplugin",
+			Namespace: "default",
+			Labels:    labels,
+		},
+		Spec: appsv1.StatefulSetSpec{
+			ServiceName: "openstack-manila-csi-controllerplugin",
+			Replicas:    &replicaNumber,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					ServiceAccountName: "openstack-manila-csi-controllerplugin",
+					Containers: []corev1.Container{
+						{
+							Name:  "provisioner",
+							Image: "quay.io/openshift/origin-csi-external-provisioner:latest",
+							Args: []string{
+								"--v=5",
+								"--csi-address=$(ADDRESS)",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "ADDRESS",
+									Value: "unix:///var/lib/kubelet/plugins/manila.csi.openstack.org/csi-controllerplugin.sock",
+								},
+							},
+							ImagePullPolicy: "IfNotPresent",
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "plugin-dir",
+									MountPath: "/var/lib/kubelet/plugins/manila.csi.openstack.org",
+								},
+							},
+						},
+						{
+							Name:  "snapshotter",
+							Image: "quay.io/openshift/origin-csi-external-snapshotter:latest",
+							Args: []string{
+								"--v=5",
+								"--csi-address=$(ADDRESS)",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "ADDRESS",
+									Value: "unix:///var/lib/kubelet/plugins/manila.csi.openstack.org/csi-controllerplugin.sock",
+								},
+							},
+							ImagePullPolicy: "IfNotPresent",
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "plugin-dir",
+									MountPath: "/var/lib/kubelet/plugins/manila.csi.openstack.org",
+								},
+							},
+						},
+						{
+							Name: "nodeplugin",
+							SecurityContext: &corev1.SecurityContext{
+								Privileged: &trueVar,
+								Capabilities: &corev1.Capabilities{
+									Add: []corev1.Capability{
+										"SYS_ADMIN",
+									},
+								},
+								AllowPrivilegeEscalation: &trueVar,
+							},
+							Image: "quay.io/openshift/origin-csi-driver-manila:latest",
+							Args: []string{
+								"--v=5",
+								"--nodeid=$(NODE_ID)",
+								"--endpoint=$(CSI_ENDPOINT)",
+								"--drivername=$(DRIVER_NAME)",
+								"--share-protocol-selector=$(MANILA_SHARE_PROTO)",
+								"--fwdendpoint=$(FWD_CSI_ENDPOINT)",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "DRIVER_NAME",
+									Value: "manila.csi.openstack.org",
+								},
+								{
+									Name: "NODE_ID",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "spec.nodeName",
+										},
+									},
+								},
+								{
+									Name:  "CSI_ENDPOINT",
+									Value: "unix:///var/lib/kubelet/plugins/manila.csi.openstack.org/csi-controllerplugin.sock",
+								},
+								{
+									Name:  "FWD_CSI_ENDPOINT",
+									Value: "unix:///var/lib/kubelet/plugins/csi-nfsplugin/csi.sock",
+								},
+								{
+									Name:  "MANILA_SHARE_PROTO",
+									Value: "NFS",
+								},
+							},
+							ImagePullPolicy: "IfNotPresent",
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "plugin-dir",
+									MountPath: "/var/lib/kubelet/plugins/manila.csi.openstack.org",
+								},
+								{
+									Name:      "fwd-plugin-dir",
+									MountPath: "/var/lib/kubelet/plugins/csi-nfsplugin",
+								},
+								{
+									Name:             "pod-mounts",
+									MountPath:        "/var/lib/kubelet/pods",
+									MountPropagation: &mountPropagationBidirectional,
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "plugin-dir",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/plugins/manila.csi.openstack.org",
+									Type: &hostPathDirectoryOrCreate,
+								},
+							},
+						},
+						{
+							Name: "fwd-plugin-dir",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/plugins/csi-nfsplugin",
+									Type: &hostPathDirectory,
+								},
+							},
+						},
+						{
+							Name: "pod-mounts",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/pods",
+									Type: &hostPathDirectory,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
