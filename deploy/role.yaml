@@ -114,6 +114,8 @@ rules:
   resources:
   - clusterroles
   - clusterrolebindings
+  - roles
+  - rolebindings
   verbs:
   - create
   - delete
@@ -159,6 +161,13 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - secrets
+  verbs:
+    - get
+    - list
+- apiGroups:
+  - ""
+  resources:
   - namespaces
   verbs:
     - get
@@ -172,3 +181,85 @@ rules:
     - list
     - update
     - watch
+    - create
+    - delete
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+    - get
+    - list
+    - update
+    - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+    - list
+    - update
+    - watch
+    - create
+    - patch
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - csinodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources:
+  - volumesnapshotclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources:
+  - volumesnapshotcontents
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - delete
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources:
+  - volumesnapshots
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources:
+  - volumesnapshots/status
+  verbs:
+  - update
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - create
+  - list
+  - watch
+  - delete
+  - get
+  - update

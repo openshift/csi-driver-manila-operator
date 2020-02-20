@@ -56,6 +56,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		&corev1.ServiceAccount{},
 		&rbacv1.ClusterRole{},
 		&rbacv1.ClusterRoleBinding{},
+		&rbacv1.Role{},
+		&rbacv1.RoleBinding{},
 	}
 
 	ownerHandler := &handler.EnqueueRequestForOwner{
@@ -133,13 +135,19 @@ func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alph
 		return reconcile.Result{}, err
 	}
 
-	// csi-controllerplugin-manilaplugin Service
+	// Manila Controller Plugin RBAC
+	err = r.handleManilaControllerPluginRBAC(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Manila Controller Plugin Service
 	err = r.handleManilaControllerPluginService(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// csi-controllerplugin-manilaplugin StatefulSet
+	// Manila Controller Plugin StatefulSet
 	err = r.handleManilaControllerPluginStatefulSet(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err

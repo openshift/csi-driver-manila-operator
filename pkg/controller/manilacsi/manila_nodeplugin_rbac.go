@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	labels = map[string]string{
+	labelsManilaNodePlugin = map[string]string{
 		"app":       "openstack-manila-csi",
 		"component": "nodeplugin",
 	}
@@ -51,7 +51,7 @@ func (r *ReconcileManilaCSI) handleManilaNodePluginServiceAccount(instance *mani
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-nodeplugin",
 			Namespace: "default",
-			Labels:    labels,
+			Labels:    labelsManilaNodePlugin,
 		},
 	}
 
@@ -83,7 +83,7 @@ func (r *ReconcileManilaCSI) handleManilaNodePluginClusterRole(instance *manilac
 	cr := &rbacv1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "openstack-manila-csi-nodeplugin",
-			Labels: labels,
+			Labels: labelsManilaNodePlugin,
 		},
 		Rules: []rbacv1.PolicyRule{
 			{
@@ -137,7 +137,7 @@ func (r *ReconcileManilaCSI) handleManilaNodePluginClusterRoleBinding(instance *
 	crb := &rbacv1.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "openstack-manila-csi-nodeplugin",
-			Labels: labels,
+			Labels: labelsManilaNodePlugin,
 		},
 		Subjects: []rbacv1.Subject{
 			{
