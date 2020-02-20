@@ -50,7 +50,7 @@ func (r *ReconcileManilaCSI) handleManilaNodePluginServiceAccount(instance *mani
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-nodeplugin",
-			Namespace: "default",
+			Namespace: "manila-csi",
 			Labels:    labelsManilaNodePlugin,
 		},
 	}
@@ -143,7 +143,7 @@ func (r *ReconcileManilaCSI) handleManilaNodePluginClusterRoleBinding(instance *
 			{
 				Kind:      "ServiceAccount",
 				Name:      "openstack-manila-csi-nodeplugin",
-				Namespace: "default",
+				Namespace: "manila-csi",
 			},
 		},
 		RoleRef: rbacv1.RoleRef{

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: csi-driver-manila-operator
+  namespace: manila-csi
 spec:
   replicas: 1
   selector:

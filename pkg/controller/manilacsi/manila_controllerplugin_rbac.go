@@ -62,7 +62,7 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginServiceAccount(instance
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
-			Namespace: "default",
+			Namespace: "manila-csi",
 			Labels:    labelsManilaControllerPlugin,
 		},
 	}
@@ -195,7 +195,7 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginClusterRoleBinding(inst
 			{
 				Kind:      "ServiceAccount",
 				Name:      "openstack-manila-csi-controllerplugin",
-				Namespace: "default",
+				Namespace: "manila-csi",
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
@@ -233,7 +233,7 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginRole(instance *manilacs
 	role := &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
-			Namespace: "default",
+			Namespace: "manila-csi",
 			Labels:    labelsManilaControllerPlugin,
 		},
 		Rules: []rbacv1.PolicyRule{
@@ -278,14 +278,14 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginRoleBinding(instance *m
 	rb := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
-			Namespace: "default",
+			Namespace: "manila-csi",
 			Labels:    labelsManilaControllerPlugin,
 		},
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
 				Name:      "openstack-manila-csi-controllerplugin",
-				Namespace: "default",
+				Namespace: "manila-csi",
 			},
 		},
 		RoleRef: rbacv1.RoleRef{

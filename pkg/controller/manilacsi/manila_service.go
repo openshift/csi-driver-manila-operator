@@ -28,7 +28,7 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginService(instance *manil
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
-			Namespace: "default",
+			Namespace: "manila-csi",
 			Labels:    labels,
 		},
 		Spec: corev1.ServiceSpec{

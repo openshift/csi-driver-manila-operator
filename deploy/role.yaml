@@ -3,6 +3,7 @@ kind: Role
 metadata:
   creationTimestamp: null
   name: csi-driver-manila-operator
+  namespace: manila-csi
 rules:
 - apiGroups:
   - ""

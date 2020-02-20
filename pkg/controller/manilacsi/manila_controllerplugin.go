@@ -64,7 +64,7 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
-			Namespace: "default",
+			Namespace: "manila-csi",
 			Labels:    labels,
 		},
 		Spec: appsv1.StatefulSetSpec{

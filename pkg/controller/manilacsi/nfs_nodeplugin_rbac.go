@@ -43,7 +43,7 @@ func (r *ReconcileManilaCSI) handleNFSNodePluginServiceAccount(instance *manilac
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "csi-nodeplugin",
-			Namespace: "default",
+			Namespace: "manila-csi",
 		},
 	}
 
@@ -128,7 +128,7 @@ func (r *ReconcileManilaCSI) handleNFSNodePluginClusterRoleBinding(instance *man
 			{
 				Kind:      "ServiceAccount",
 				Name:      "csi-nodeplugin",
-				Namespace: "default",
+				Namespace: "manila-csi",
 			},
 		},
 		RoleRef: rbacv1.RoleRef{

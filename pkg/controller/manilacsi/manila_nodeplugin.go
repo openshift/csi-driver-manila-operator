@@ -57,7 +57,7 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-nodeplugin",
-			Namespace: "default",
+			Namespace: "manila-csi",
 			Labels:    labels,
 		},
 		Spec: appsv1.DaemonSetSpec{
