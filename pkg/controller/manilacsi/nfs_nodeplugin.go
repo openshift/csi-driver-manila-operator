@@ -66,6 +66,7 @@ func generateNFSNodePluginManifest() *appsv1.DaemonSet {
 					Labels: labelsNFSNodePlugin,
 				},
 				Spec: corev1.PodSpec{
+					ServiceAccountName: "csi-nodeplugin",
 					Containers: []corev1.Container{
 						{
 							Name: "nfs",
