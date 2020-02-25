@@ -59,6 +59,7 @@ func generateNFSNodePluginManifest() *appsv1.DaemonSet {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "csi-nodeplugin-nfsplugin",
 			Namespace: "manila-csi",
+			Labels: labels,
 		},
 		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{
