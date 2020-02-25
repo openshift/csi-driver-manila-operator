@@ -52,11 +52,6 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 	hostPathDirectoryOrCreate := corev1.HostPathDirectoryOrCreate
 	hostPathDirectory := corev1.HostPathDirectory
 
-	labels := map[string]string{
-		"app":       "openstack-manila-csi",
-		"component": "controllerplugin",
-	}
-
 	return &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
@@ -65,23 +60,23 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
 			Namespace: "manila-csi",
-			Labels:    labels,
+			Labels:    labelsManilaControllerPlugin,
 		},
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName: "openstack-manila-csi-controllerplugin",
 			Replicas:    &replicaNumber,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: labelsManilaControllerPlugin,
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels: labelsManilaControllerPlugin,
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: "openstack-manila-csi-controllerplugin",
 					Containers: []corev1.Container{
 						{
-							Name:  "provisioner",
+							Name: "provisioner",
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: &trueVar,
 								Capabilities: &corev1.Capabilities{
@@ -111,7 +106,7 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 							},
 						},
 						{
-							Name:  "snapshotter",
+							Name: "snapshotter",
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: &trueVar,
 								Capabilities: &corev1.Capabilities{

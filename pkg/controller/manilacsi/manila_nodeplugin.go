@@ -45,11 +45,6 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 	hostPathDirectoryOrCreate := corev1.HostPathDirectoryOrCreate
 	hostPathDirectory := corev1.HostPathDirectory
 
-	labels := map[string]string{
-		"app":       "openstack-manila-csi",
-		"component": "nodeplugin",
-	}
-
 	return &appsv1.DaemonSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DaemonSet",
@@ -58,15 +53,15 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-nodeplugin",
 			Namespace: "manila-csi",
-			Labels:    labels,
+			Labels:    labelsManilaNodePlugin,
 		},
 		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: labelsManilaNodePlugin,
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels: labelsManilaNodePlugin,
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: "openstack-manila-csi-nodeplugin",
@@ -74,7 +69,7 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 					DNSPolicy:          corev1.DNSClusterFirstWithHostNet,
 					Containers: []corev1.Container{
 						{
-							Name:  "registrar",
+							Name: "registrar",
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: &trueVar,
 								Capabilities: &corev1.Capabilities{

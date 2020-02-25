@@ -12,6 +12,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+var (
+	labelsNFSNodePlugin = map[string]string{
+		"app":       "openstack-manila-csi",
+		"component": "nfs-nodeplugin",
+	}
+)
+
 func (r *ReconcileManilaCSI) handleNFSNodePluginRBAC(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling NFS Node Plugin RBAC resources")
 
@@ -44,6 +51,7 @@ func (r *ReconcileManilaCSI) handleNFSNodePluginServiceAccount(instance *manilac
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "csi-nodeplugin",
 			Namespace: "manila-csi",
+			Labels:    labelsNFSNodePlugin,
 		},
 	}
 
@@ -74,7 +82,8 @@ func (r *ReconcileManilaCSI) handleNFSNodePluginClusterRole(instance *manilacsiv
 	// Define a new ClusterRole object
 	cr := &rbacv1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "csi-nodeplugin",
+			Name:   "csi-nodeplugin",
+			Labels: labelsNFSNodePlugin,
 		},
 		Rules: []rbacv1.PolicyRule{
 			{
@@ -122,7 +131,8 @@ func (r *ReconcileManilaCSI) handleNFSNodePluginClusterRoleBinding(instance *man
 	// Define a new ClusterRoleBinding object
 	crb := &rbacv1.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "csi-nodeplugin",
+			Name:   "csi-nodeplugin",
+			Labels: labelsNFSNodePlugin,
 		},
 		Subjects: []rbacv1.Subject{
 			{

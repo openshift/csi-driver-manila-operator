@@ -47,10 +47,6 @@ func generateNFSNodePluginManifest() *appsv1.DaemonSet {
 
 	mountPropagationBidirectional := corev1.MountPropagationBidirectional
 
-	labels := map[string]string{
-		"app": "csi-nodeplugin-nfsplugin",
-	}
-
 	return &appsv1.DaemonSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DaemonSet",
@@ -59,15 +55,15 @@ func generateNFSNodePluginManifest() *appsv1.DaemonSet {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "csi-nodeplugin-nfsplugin",
 			Namespace: "manila-csi",
-			Labels: labels,
+			Labels:    labelsNFSNodePlugin,
 		},
 		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: labelsNFSNodePlugin,
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels: labelsNFSNodePlugin,
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
