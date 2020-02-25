@@ -75,6 +75,15 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 					Containers: []corev1.Container{
 						{
 							Name:  "registrar",
+							SecurityContext: &corev1.SecurityContext{
+								Privileged: &trueVar,
+								Capabilities: &corev1.Capabilities{
+									Add: []corev1.Capability{
+										"SYS_ADMIN",
+									},
+								},
+								AllowPrivilegeEscalation: &trueVar,
+							},
 							Image: "quay.io/openshift/origin-csi-node-driver-registrar:latest",
 							Args: []string{
 								"--v=5",

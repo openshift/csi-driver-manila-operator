@@ -82,6 +82,15 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 					Containers: []corev1.Container{
 						{
 							Name:  "provisioner",
+							SecurityContext: &corev1.SecurityContext{
+								Privileged: &trueVar,
+								Capabilities: &corev1.Capabilities{
+									Add: []corev1.Capability{
+										"SYS_ADMIN",
+									},
+								},
+								AllowPrivilegeEscalation: &trueVar,
+							},
 							Image: "quay.io/openshift/origin-csi-external-provisioner:latest",
 							Args: []string{
 								"--v=5",
@@ -103,6 +112,15 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 						},
 						{
 							Name:  "snapshotter",
+							SecurityContext: &corev1.SecurityContext{
+								Privileged: &trueVar,
+								Capabilities: &corev1.Capabilities{
+									Add: []corev1.Capability{
+										"SYS_ADMIN",
+									},
+								},
+								AllowPrivilegeEscalation: &trueVar,
+							},
 							Image: "quay.io/openshift/origin-csi-external-snapshotter:latest",
 							Args: []string{
 								"--v=5",
