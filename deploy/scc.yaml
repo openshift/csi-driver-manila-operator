@@ -1,0 +1,37 @@
+# Create an SCC for OCP
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: csi-driver-manila-operator
+allowPrivilegedContainer: true
+allowPrivilegeEscalation: true
+allowHostDirVolumePlugin: true
+allowedCapabilities:
+- SYS_ADMIN
+allowHostIPC: true
+allowHostNetwork: true
+allowHostPID: false
+allowHostPorts: false
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+fsGroup:
+  type: RunAsAny
+supplementalGroups:
+  type: RunAsAny
+users:
+- system:serviceaccount:manila-csi:csi-driver-manila-operator
+- system:serviceaccount:manila-csi:csi-nodeplugin
+- system:serviceaccount:manila-csi:openstack-manila-csi-controllerplugin
+- system:serviceaccount:manila-csi:openstack-manila-csi-nodeplugin
+groups: []
+volumes:
+- configMap
+- downwardAPI
+- emptyDir
+- hostPath
+- nfs
+- persistentVolumeClaim
+- projected
+- secret
