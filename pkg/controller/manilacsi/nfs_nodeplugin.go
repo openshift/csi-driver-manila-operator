@@ -69,10 +69,8 @@ func generateNFSNodePluginManifest() *appsv1.DaemonSet {
 					ServiceAccountName: "csi-nodeplugin",
 					Containers: []corev1.Container{
 						{
-							Name: "nfs",
-							// TODO(mfedosin): start using the downstream image when
-							// it is available.
-							Image: "quay.io/k8scsi/nfsplugin:canary",
+							Name:  "nfs",
+							Image: "quay.io/openshift/origin-csi-driver-nfs:latest",
 							Args: []string{
 								"--nodeid=$(NODE_ID)",
 								"--endpoint=unix://plugin/csi.sock",
