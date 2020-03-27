@@ -16,8 +16,7 @@ spec:
       serviceAccountName: csi-driver-manila-operator
       containers:
         - name: csi-driver-manila-operator
-          # Replace this with the built image name
-          image: quay.io/fedosin/csi-driver-manila-operator:latest
+          image: quay.io/openshift/origin-csi-driver-manila-operator:latest
           command:
           - csi-driver-manila-operator
           imagePullPolicy: Always
