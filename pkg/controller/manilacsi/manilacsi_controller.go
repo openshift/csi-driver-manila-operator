@@ -51,6 +51,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	watchOwnedObjects := []runtime.Object{
 		&appsv1.StatefulSet{},
 		&appsv1.DaemonSet{},
+		&corev1.Secret{},
 		&corev1.Service{},
 		&storagev1beta1.CSIDriver{},
 		&corev1.ServiceAccount{},
@@ -117,8 +118,14 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) (reconcile.Result, error) {
 	reqLogger.Info("Reconciling ManilaCSI Deployment Objects")
 
+	// Driver Secret
+	err := r.createDriverCredentialsSecret(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// NFS Node Plugin RBAC
-	err := r.handleNFSNodePluginRBAC(instance, reqLogger)
+	err = r.handleNFSNodePluginRBAC(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
