@@ -1,4 +1,4 @@
-module github.com/Fedosin/csi-driver-manila-operator
+module github.com/openshift/csi-driver-manila-operator
 
 go 1.13
 

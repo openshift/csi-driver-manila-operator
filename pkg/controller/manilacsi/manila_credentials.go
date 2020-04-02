@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	manilacsiv1alpha1 "github.com/Fedosin/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

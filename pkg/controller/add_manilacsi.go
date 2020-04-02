@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/Fedosin/csi-driver-manila-operator/pkg/controller/manilacsi"
+	"github.com/openshift/csi-driver-manila-operator/pkg/controller/manilacsi"
 )
 
 func init() {
