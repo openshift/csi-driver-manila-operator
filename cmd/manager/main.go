@@ -16,6 +16,12 @@ import (
 	"github.com/openshift/csi-driver-manila-operator/pkg/controller"
 	"github.com/openshift/csi-driver-manila-operator/version"
 
+	credsv1 "github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	storagev1beta1 "k8s.io/api/storage/v1beta1"
+
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
@@ -24,6 +30,7 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"
+	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -36,8 +43,17 @@ var (
 	metricsHost               = "0.0.0.0"
 	metricsPort         int32 = 8383
 	operatorMetricsPort int32 = 8686
+	scheme                    = apiruntime.NewScheme()
 )
 var log = logf.Log.WithName("cmd")
+
+func init() {
+	credsv1.AddToScheme(scheme)
+	appsv1.AddToScheme(scheme)
+	corev1.AddToScheme(scheme)
+	rbacv1.AddToScheme(scheme)
+	storagev1beta1.AddToScheme(scheme)
+}
 
 func printVersion() {
 	log.Info(fmt.Sprintf("Operator Version: %s", version.Version))
@@ -94,6 +110,7 @@ func main() {
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
 		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+		Scheme:             scheme,
 	})
 	if err != nil {
 		log.Error(err, "")
