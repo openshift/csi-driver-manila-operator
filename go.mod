@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/go-logr/logr v0.1.0
 	github.com/gophercloud/utils v0.0.0-20200324021909-95fb81d3291f
+	github.com/openshift/cloud-credential-operator v0.0.0-20200406220359-beb5844a1e05
 	github.com/operator-framework/operator-sdk v0.15.1
 	github.com/spf13/pflag v1.0.5
 	gopkg.in/yaml.v2 v2.2.8

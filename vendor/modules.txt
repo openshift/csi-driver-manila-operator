@@ -98,6 +98,8 @@ github.com/matttproud/golang_protobuf_extensions/pbutil
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
+# github.com/openshift/cloud-credential-operator v0.0.0-20200406220359-beb5844a1e05
+github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1
 # github.com/operator-framework/operator-sdk v0.15.1
 github.com/operator-framework/operator-sdk/pkg/k8sutil
 github.com/operator-framework/operator-sdk/pkg/kube-metrics
