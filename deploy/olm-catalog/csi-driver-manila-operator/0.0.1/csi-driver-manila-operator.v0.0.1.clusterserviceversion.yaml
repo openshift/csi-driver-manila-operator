@@ -211,6 +211,16 @@ spec:
           - delete
           - get
           - update
+        - apiGroups:
+          - cloudcredential.openshift.io
+          resources:
+          - credentialsrequests
+          verbs:
+          - create
+          - list
+          - watch
+          - delete
+          - get
         serviceAccountName: csi-driver-manila-operator
       deployments:
       - name: csi-driver-manila-operator

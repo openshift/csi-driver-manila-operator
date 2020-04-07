@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	credsv1 "github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -59,6 +60,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		&rbacv1.ClusterRoleBinding{},
 		&rbacv1.Role{},
 		&rbacv1.RoleBinding{},
+		&credsv1.CredentialsRequest{},
 	}
 
 	ownerHandler := &handler.EnqueueRequestForOwner{
@@ -118,8 +120,14 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) (reconcile.Result, error) {
 	reqLogger.Info("Reconciling ManilaCSI Deployment Objects")
 
+	// Credentials Request
+	err := r.handleCredentialsRequest(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// Driver Secret
-	err := r.createDriverCredentialsSecret(instance, reqLogger)
+	err = r.createDriverCredentialsSecret(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

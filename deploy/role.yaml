@@ -264,3 +264,13 @@ rules:
   - delete
   - get
   - update
+- apiGroups:
+  - cloudcredential.openshift.io
+  resources:
+  - credentialsrequests
+  verbs:
+  - create
+  - list
+  - watch
+  - delete
+  - get
