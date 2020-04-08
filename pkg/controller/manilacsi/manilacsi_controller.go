@@ -15,6 +15,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	storagev1beta1 "k8s.io/api/storage/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -62,6 +63,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		&corev1.Secret{},
 		&corev1.Service{},
 		&storagev1beta1.CSIDriver{},
+		&storagev1.StorageClass{},
 		&corev1.ServiceAccount{},
 		&rbacv1.ClusterRole{},
 		&rbacv1.ClusterRoleBinding{},
@@ -128,17 +130,26 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 	// Driver Secret
 	err = r.createDriverCredentialsSecret(instance, reqLogger)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			reqLogger.Info(fmt.Sprintf("No %v secret was found in %v namespace. Retrying...", installerSecretName, secretNamespace))
+		}
 		return reconcile.Result{}, err
 	}
 
 	reqLogger.Info("Fetching Manila Share Types")
-	_, err = r.getManilaShareTypes(reqLogger)
+	shareTypes, err := r.getManilaShareTypes(reqLogger)
 	if err != nil {
 		if _, ok := err.(gophercloud.ErrDefault404); !ok {
 			return reconcile.Result{}, err
 		}
 		reqLogger.Info("OpenStack Manila is not available in the cloud")
 		return reconcile.Result{}, nil
+	}
+
+	// StorageClasses
+	err = r.handleManilaStorageClasses(instance, shareTypes, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	// Manage objects created by the operator

@@ -20,6 +20,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	storagev1beta1 "k8s.io/api/storage/v1beta1"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -52,6 +53,7 @@ func init() {
 	appsv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
 	rbacv1.AddToScheme(scheme)
+	storagev1.AddToScheme(scheme)
 	storagev1beta1.AddToScheme(scheme)
 }
 

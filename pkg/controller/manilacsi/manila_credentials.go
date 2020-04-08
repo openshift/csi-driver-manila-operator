@@ -38,10 +38,6 @@ func (r *ReconcileManilaCSI) createDriverCredentialsSecret(instance *manilacsiv1
 	// Check if the installer secret, created from the credentials request, exists
 	cloudConfig, err := r.getCloudFromSecret()
 	if err != nil {
-		if errors.IsNotFound(err) {
-			reqLogger.Info("No %v secret was found in %v namespace. Skip credentials reconciling", installerSecretName, secretNamespace)
-			return nil
-		}
 		return err
 	}
 
