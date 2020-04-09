@@ -2,12 +2,10 @@ package manilacsi
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
-	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,10 +38,6 @@ func (r *ReconcileManilaCSI) createDriverCredentialsSecret(instance *manilacsiv1
 	// Check if the installer secret, created from the credentials request, exists
 	cloudConfig, err := r.getCloudFromSecret()
 	if err != nil {
-		if errors.IsNotFound(err) {
-			reqLogger.Info("No %v secret was found in %v namespace. Skip credentials reconciling", installerSecretName, secretNamespace)
-			return nil
-		}
 		return err
 	}
 
@@ -108,31 +102,4 @@ func generateSecret(cloud clientconfig.Cloud) *corev1.Secret {
 	}
 
 	return &secret
-}
-
-// getCloudFromSecret extract a Cloud from the given namespace:secretName
-func (r *ReconcileManilaCSI) getCloudFromSecret() (clientconfig.Cloud, error) {
-	ctx := context.TODO()
-	emptyCloud := clientconfig.Cloud{}
-
-	secret := &corev1.Secret{}
-	err := r.client.Get(ctx, types.NamespacedName{
-		Namespace: secretNamespace,
-		Name:      installerSecretName,
-	}, secret)
-	if err != nil {
-		return emptyCloud, err
-	}
-
-	content, ok := secret.Data[cloudsSecretKey]
-	if !ok {
-		return emptyCloud, fmt.Errorf("OpenStack credentials secret %v did not contain key %v", installerSecretName, cloudsSecretKey)
-	}
-	var clouds clientconfig.Clouds
-	err = yaml.Unmarshal(content, &clouds)
-	if err != nil {
-		return emptyCloud, fmt.Errorf("failed to unmarshal clouds credentials stored in secret %v: %v", installerSecretName, err)
-	}
-
-	return clouds.Clouds[cloudName], nil
 }

@@ -15,7 +15,7 @@ TBD
 The operator needs its own namespace, service account, security context, and a few roles and bindings. For example, to install these on OpenShift >= 4.4:
 
 ```sh
-oc apply -f deploy/namespace.yaml -f deploy/crds/manilacsi.openshift.io_manilacsis_crd.yaml -f deploy/service_account.yaml -f deploy/role_binding.yaml -f deploy/role.yaml -f deploy/scc.yaml -f deploy/crds/manilacsi.openshift.io_v1alpha1_manilacsi_cr.yaml -f examples/nfs/dynamic-provisioning/storageclass.yaml -f deploy/operator.yaml
+oc apply -f deploy/namespace.yaml -f deploy/crds/manilacsi.openshift.io_manilacsis_crd.yaml -f deploy/service_account.yaml -f deploy/role_binding.yaml -f deploy/role.yaml -f deploy/scc.yaml -f deploy/crds/manilacsi.openshift.io_v1alpha1_manilacsi_cr.yaml -f deploy/operator.yaml
 ```
 
 **NOTE**: You don't need to apply deploy/scc.yaml if you are using Kubernetes.
@@ -110,5 +110,5 @@ TBD
 #### Removing the operator manually
 
 ```sh
-oc delete -f deploy/operator.yaml -f examples/nfs/dynamic-provisioning/storageclass.yaml -f deploy/crds/manilacsi.openshift.io_v1alpha1_manilacsi_cr.yaml -f deploy/scc.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/service_account.yaml -f deploy/crds/manilacsi.openshift.io_manilacsis_crd.yaml -f deploy/namespace.yaml
+oc delete -f deploy/operator.yaml -f deploy/crds/manilacsi.openshift.io_v1alpha1_manilacsi_cr.yaml -f deploy/scc.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/service_account.yaml -f deploy/crds/manilacsi.openshift.io_manilacsis_crd.yaml -f deploy/namespace.yaml
 ```
