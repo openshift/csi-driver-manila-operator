@@ -7,3 +7,6 @@ approvers:
   - pierreprinetti
   - tombarron
   - tsmetana
+
+component: "Installer"
+subcomponent: "OpenShift on OpenStack"
