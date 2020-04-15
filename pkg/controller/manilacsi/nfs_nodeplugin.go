@@ -70,7 +70,7 @@ func generateNFSNodePluginManifest() *appsv1.DaemonSet {
 					Containers: []corev1.Container{
 						{
 							Name:  "nfs",
-							Image: "quay.io/openshift/origin-csi-driver-nfs:latest",
+							Image: getCSIDriverNFSImage(),
 							Args: []string{
 								"--nodeid=$(NODE_ID)",
 								"--endpoint=unix://plugin/csi.sock",

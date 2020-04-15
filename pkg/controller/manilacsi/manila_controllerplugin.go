@@ -86,7 +86,7 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 								},
 								AllowPrivilegeEscalation: &trueVar,
 							},
-							Image: "quay.io/openshift/origin-csi-external-provisioner:latest",
+							Image: getExternalProvisionerImage(),
 							Args: []string{
 								"--v=5",
 								"--csi-address=$(ADDRESS)",
@@ -116,7 +116,7 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 								},
 								AllowPrivilegeEscalation: &trueVar,
 							},
-							Image: "quay.io/openshift/origin-csi-external-snapshotter:latest",
+							Image: getExternalSnaphotterImage(),
 							Args: []string{
 								"--v=5",
 								"--csi-address=$(ADDRESS)",
@@ -146,7 +146,7 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 								},
 								AllowPrivilegeEscalation: &trueVar,
 							},
-							Image: "quay.io/openshift/origin-csi-driver-manila:latest",
+							Image: getCSIDriverManilaImage(),
 							Args: []string{
 								"--v=5",
 								"--nodeid=$(NODE_ID)",
