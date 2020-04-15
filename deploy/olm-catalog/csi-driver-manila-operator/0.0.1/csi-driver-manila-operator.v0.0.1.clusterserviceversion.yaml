@@ -29,6 +29,9 @@ spec:
       version: v1alpha1
   description: Placeholder description
   displayName: Csi Driver Manila Operator
+  icon:
+  - base64data: ""
+    mediatype: ""
   install:
     spec:
       clusterPermissions:
@@ -250,6 +253,16 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: csi-driver-manila-operator
+                - name: EXTERNAL_PROVISIONER_IMAGE
+                  value: quay.io/openshift/origin-csi-external-provisioner:latest
+                - name: EXTERNAL_SNAPSHOTTER_IMAGE
+                  value: quay.io/openshift/origin-csi-external-snapshotter:latest
+                - name: CSI_DRIVER_MANILA_IMAGE
+                  value: quay.io/openshift/origin-csi-driver-manila:latest
+                - name: CSI_NODE_DRIVER_REGISTRAR_IMAGE
+                  value: quay.io/openshift/origin-csi-node-driver-registrar:latest
+                - name: CSI_DRIVER_NFS_IMAGE
+                  value: quay.io/openshift/origin-csi-driver-nfs:latest
                 image: quay.io/openshift/origin-csi-driver-manila-operator:latest
                 imagePullPolicy: Always
                 name: csi-driver-manila-operator
@@ -342,6 +355,10 @@ spec:
     type: MultiNamespace
   - supported: true
     type: AllNamespaces
+  keywords:
+  - ""
+  maintainers:
+  - {}
   maturity: alpha
   provider: {}
   replaces: csi-driver-manila-operator.v0.0.0

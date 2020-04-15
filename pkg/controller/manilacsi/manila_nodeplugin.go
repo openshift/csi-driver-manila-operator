@@ -79,7 +79,7 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 								},
 								AllowPrivilegeEscalation: &trueVar,
 							},
-							Image: "quay.io/openshift/origin-csi-node-driver-registrar:latest",
+							Image: getCSINodeDriverRegistrarImage(),
 							Args: []string{
 								"--v=5",
 								"--csi-address=/csi/csi.sock",
@@ -128,7 +128,7 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 								},
 								AllowPrivilegeEscalation: &trueVar,
 							},
-							Image: "quay.io/openshift/origin-csi-driver-manila:latest",
+							Image: getCSIDriverManilaImage(),
 							Args: []string{
 								"--v=5",
 								"--nodeid=$(NODE_ID)",
