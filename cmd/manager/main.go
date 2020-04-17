@@ -16,6 +16,7 @@ import (
 	"github.com/openshift/csi-driver-manila-operator/pkg/controller"
 	"github.com/openshift/csi-driver-manila-operator/version"
 
+	securityv1 "github.com/openshift/api/security/v1"
 	credsv1 "github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -55,6 +56,7 @@ func init() {
 	rbacv1.AddToScheme(scheme)
 	storagev1.AddToScheme(scheme)
 	storagev1beta1.AddToScheme(scheme)
+	securityv1.AddToScheme(scheme)
 }
 
 func printVersion() {

@@ -225,6 +225,17 @@ spec:
           - watch
           - delete
           - get
+        - apiGroups:
+          - security.openshift.io
+          resources:
+          - securitycontextconstraints
+          verbs:
+          - create
+          - list
+          - watch
+          - delete
+          - get
+          - update
         serviceAccountName: csi-driver-manila-operator
       deployments:
       - name: csi-driver-manila-operator

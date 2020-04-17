@@ -9,6 +9,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	securityv1 "github.com/openshift/api/security/v1"
 	credsv1 "github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	"gopkg.in/yaml.v2"
@@ -70,6 +71,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		&rbacv1.Role{},
 		&rbacv1.RoleBinding{},
 		&credsv1.CredentialsRequest{},
+		&securityv1.SecurityContextConstraints{},
 	}
 
 	ownerHandler := &handler.EnqueueRequestForOwner{
@@ -160,8 +162,14 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) (reconcile.Result, error) {
 	reqLogger.Info("Reconciling ManilaCSI Deployment Objects")
 
+	// Security Context Constraints
+	err := r.handleSecurityContextConstraints(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// NFS Node Plugin RBAC
-	err := r.handleNFSNodePluginRBAC(instance, reqLogger)
+	err = r.handleNFSNodePluginRBAC(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
