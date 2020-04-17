@@ -11,7 +11,7 @@ ENV OPERATOR=/usr/local/bin/csi-driver-manila-operator \
 
 COPY --from=0 /go/src/github.com/openshift/csi-driver-manila-operator/csi-driver-manila-operator ${OPERATOR}
 
-COPY deploy/olm-catalog/csi-driver-manila-operator /manifests
+COPY bundle /bundle
 
 COPY build/bin /usr/local/bin
 RUN  /usr/local/bin/user_setup
