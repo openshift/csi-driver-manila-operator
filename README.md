@@ -6,7 +6,7 @@ Operator to create, configure and manage CSI driver for OpenStack Manila in Kube
 
 ### Installing the operator
 
-#### Operatorhub installation
+#### Operatorhub installation 
 
 TBD
 
