@@ -13,6 +13,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+func (r *ReconcileManilaCSI) getManilaControllerPluginStatefulSetStatus() (bool, error) {
+	ss := generateManilaControllerPluginStatefulSet()
+
+	found := &appsv1.StatefulSet{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ss.Name, Namespace: ss.Namespace}, found)
+	if err != nil {
+		return false, err
+	}
+
+	return found.Status.ReadyReplicas == found.Status.Replicas, nil
+}
+
 func (r *ReconcileManilaCSI) handleManilaControllerPluginStatefulSet(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Controller Plugin StatefulSet")
 

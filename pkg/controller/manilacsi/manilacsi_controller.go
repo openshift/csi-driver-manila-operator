@@ -3,6 +3,7 @@ package manilacsi
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
@@ -12,6 +13,7 @@ import (
 	securityv1 "github.com/openshift/api/security/v1"
 	credsv1 "github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	oversion "github.com/openshift/csi-driver-manila-operator/version"
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -123,9 +125,25 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
+	status := *instance.Status.DeepCopy()
+	defer func() {
+		if !reflect.DeepEqual(status, instance.Status) {
+			reqLogger.Info("updating ManilaCSI status", "name", instance.Name)
+			instance.Status = status
+			sErr := r.client.Status().Update(context.TODO(), instance)
+			if sErr != nil {
+				reqLogger.Error(sErr, "failed to update ManilaCSI status", "name", instance.Name)
+			}
+		}
+	}()
+
+	status.Version = oversion.Version
+	status.Phase = manilacsiv1alpha1.DriverPhaseCreating
+
 	// Credentials Request
 	err = r.handleCredentialsRequest(instance, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 
@@ -134,6 +152,9 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 	if err != nil {
 		if errors.IsNotFound(err) {
 			reqLogger.Info(fmt.Sprintf("No %v secret was found in %v namespace. Retrying...", installerSecretName, secretNamespace))
+			return reconcile.Result{
+				RequeueAfter: 10,
+			}, nil
 		}
 		return reconcile.Result{}, err
 	}
@@ -142,77 +163,125 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 	shareTypes, err := r.getManilaShareTypes(reqLogger)
 	if err != nil {
 		if _, ok := err.(gophercloud.ErrDefault404); !ok {
+			status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 			return reconcile.Result{}, err
 		}
 		reqLogger.Info("OpenStack Manila is not available in the cloud")
+		status.Phase = manilacsiv1alpha1.DriverPhaseNoManila
 		return reconcile.Result{}, nil
 	}
 
 	// StorageClasses
 	err = r.handleManilaStorageClasses(instance, shareTypes, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 
 	// Manage objects created by the operator
-	return r.handleManilaCSIDeployment(instance, reqLogger)
+	res, err := r.handleManilaCSIDeployment(instance, &status, reqLogger)
+	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
+		return reconcile.Result{}, err
+	}
+
+	// Update instance status
+
+	status.ControllerReady, err = r.getManilaControllerPluginStatefulSetStatus()
+	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
+		return reconcile.Result{}, err
+	}
+
+	status.NodeReady, err = r.getManilaNodePluginDaemonSetStatus()
+	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
+		return reconcile.Result{}, err
+	}
+
+	status.NFSNodeReady, err = r.getNFSNodePluginDaemonSetStatus()
+	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
+		return reconcile.Result{}, err
+	}
+
+	if status.ControllerReady && status.NodeReady && status.NFSNodeReady {
+		reqLogger.Info("All components are ready.", "Manila Controller", status.ControllerReady, "Manila Node", status.NodeReady, "NFS Node", status.NFSNodeReady)
+		status.Phase = manilacsiv1alpha1.DriverPhaseRunning
+	} else {
+		reqLogger.Info("Some components are not ready. Retrying...", "Manila Controller", status.ControllerReady, "Manila Node", status.NodeReady, "NFS Node", status.NFSNodeReady)
+		return reconcile.Result{
+			RequeueAfter: 10,
+		}, nil
+	}
+
+	return res, nil
 }
 
 // Manage the Objects created by the Operator.
-func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) (reconcile.Result, error) {
+func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alpha1.ManilaCSI, status *manilacsiv1alpha1.ManilaCSIStatus, reqLogger logr.Logger) (reconcile.Result, error) {
 	reqLogger.Info("Reconciling ManilaCSI Deployment Objects")
 
 	// Security Context Constraints
 	err := r.handleSecurityContextConstraints(instance, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 
 	// NFS Node Plugin RBAC
 	err = r.handleNFSNodePluginRBAC(instance, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 
 	// NFS Node Plugin DaemonSet
 	err = r.handleNFSNodePluginDaemonSet(instance, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 
 	// CSIDriver
 	err = r.handleManilaCSIDriver(instance, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 
 	// Manila Controller Plugin RBAC
 	err = r.handleManilaControllerPluginRBAC(instance, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 
 	// Manila Controller Plugin Service
 	err = r.handleManilaControllerPluginService(instance, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 
 	// Manila Controller Plugin StatefulSet
 	err = r.handleManilaControllerPluginStatefulSet(instance, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 
 	// Manila Node Plugin RBAC
 	err = r.handleManilaNodePluginRBAC(instance, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 
 	// Manila Node Plugin DaemonSet
 	err = r.handleManilaNodePluginDaemonSet(instance, reqLogger)
 	if err != nil {
+		status.Phase = manilacsiv1alpha1.DriverPhaseFailed
 		return reconcile.Result{}, err
 	}
 

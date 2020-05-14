@@ -33,6 +33,25 @@ spec:
           type: object
         status:
           description: ManilaCSIStatus defines the observed state of ManilaCSI
+          properties:
+            controllerReady:
+              type: boolean
+            nfsNodeReady:
+              type: boolean
+            nodeReady:
+              type: boolean
+            phase:
+              description: Phase is the driver running phase
+              type: string
+            version:
+              description: Version is the current operator version
+              type: string
+          required:
+          - controllerReady
+          - nfsNodeReady
+          - nodeReady
+          - phase
+          - version
           type: object
       type: object
   version: v1alpha1

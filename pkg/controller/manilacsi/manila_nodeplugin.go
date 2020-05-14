@@ -12,6 +12,18 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+func (r *ReconcileManilaCSI) getManilaNodePluginDaemonSetStatus() (bool, error) {
+	ds := generateManilaNodePluginManifest()
+
+	found := &appsv1.DaemonSet{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ds.Name, Namespace: ds.Namespace}, found)
+	if err != nil {
+		return false, err
+	}
+
+	return found.Status.DesiredNumberScheduled == found.Status.NumberAvailable, nil
+}
+
 func (r *ReconcileManilaCSI) handleManilaNodePluginDaemonSet(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Node Plugin DaemonSet")
 

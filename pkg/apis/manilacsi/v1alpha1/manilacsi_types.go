@@ -4,12 +4,30 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type DriverPhase string
+
+const (
+	DriverPhaseNone     DriverPhase = ""
+	DriverPhaseCreating DriverPhase = "Creating"
+	DriverPhaseRunning  DriverPhase = "Running"
+	DriverPhaseFailed   DriverPhase = "Failed"
+	DriverPhaseNoManila DriverPhase = "Manila service is not available"
+)
+
 // ManilaCSISpec defines the desired state of ManilaCSI
 type ManilaCSISpec struct {
 }
 
 // ManilaCSIStatus defines the observed state of ManilaCSI
 type ManilaCSIStatus struct {
+	// Phase is the driver running phase
+	Phase           DriverPhase `json:"phase"`
+	ControllerReady bool        `json:"controllerReady"`
+	NodeReady       bool        `json:"nodeReady"`
+	NFSNodeReady    bool        `json:"nfsNodeReady"`
+
+	// Version is the current operator version
+	Version string `json:"version"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
