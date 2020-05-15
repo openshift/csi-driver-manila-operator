@@ -3,6 +3,7 @@ package manilacsi
 import (
 	"context"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -34,8 +35,24 @@ func (r *ReconcileManilaCSI) handleManilaNodePluginDaemonSet(instance *manilacsi
 		return err
 	}
 
-	// DaemonSet already exists - don't requeue
-	reqLogger.Info("Skip reconcile: DaemonSet already exists", "DaemonSet.Namespace", found.Namespace, "DaemonSet.Name", found.Name)
+	// Check if we need to update the object
+	ds.Status = found.Status
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, ds)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating DaemonSet with new changes", "DaemonSet.Namespace", found.Namespace, "DaemonSet.Name", found.Name, "Changes", patchResult.String())
+		err = r.client.Update(context.TODO(), ds)
+		if err != nil {
+			return err
+		}
+	} else {
+		// DaemonSet already exists - don't requeue
+		reqLogger.Info("Skip reconcile: DaemonSet already exists", "DaemonSet.Namespace", found.Namespace, "DaemonSet.Name", found.Name)
+	}
+
 	return nil
 }
 

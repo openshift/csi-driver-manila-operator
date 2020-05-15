@@ -3,6 +3,7 @@ package manilacsi
 import (
 	"context"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	credsv1 "github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
@@ -37,8 +38,23 @@ func (r *ReconcileManilaCSI) handleCredentialsRequest(instance *manilacsiv1alpha
 		return err
 	}
 
-	// Credential Request already exists - don't requeue
-	reqLogger.Info("Skip reconcile: CredentialsRequest already exists", "CredentialsRequest.Namespace", found.Namespace, "CredentialsRequest.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, creq)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating CredentialsRequest with new changes", "CredentialsRequest.Namespace", found.Namespace, "CredentialsRequest.Name", found.Name)
+		err = r.client.Update(context.TODO(), creq)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Credential Request already exists - don't requeue
+		reqLogger.Info("Skip reconcile: CredentialsRequest already exists", "CredentialsRequest.Namespace", found.Namespace, "CredentialsRequest.Name", found.Name)
+	}
+
 	return nil
 }
 

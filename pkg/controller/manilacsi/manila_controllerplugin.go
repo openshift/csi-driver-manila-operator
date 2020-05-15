@@ -3,6 +3,7 @@ package manilacsi
 import (
 	"context"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -40,8 +41,24 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginStatefulSet(instance *m
 		return err
 	}
 
-	// DaemonSet already exists - don't requeue
-	reqLogger.Info("Skip reconcile: StatefulSet already exists", "StatefulSet.Namespace", found.Namespace, "StatefulSet.Name", found.Name)
+	// Check if we need to update the object
+	ss.Status = found.Status
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, ss)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating StatefulSet with new changes", "StatefulSet.Namespace", found.Namespace, "StatefulSet.Name", found.Name, "Changes", patchResult.String())
+		err = r.client.Update(context.TODO(), ss)
+		if err != nil {
+			return err
+		}
+	} else {
+		// StatefulSet already exists - don't requeue
+		reqLogger.Info("Skip reconcile: StatefulSet already exists", "StatefulSet.Namespace", found.Namespace, "StatefulSet.Name", found.Name)
+	}
+
 	return nil
 }
 

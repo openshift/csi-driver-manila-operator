@@ -3,6 +3,7 @@ package manilacsi
 import (
 	"context"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -71,8 +72,23 @@ func (r *ReconcileManilaCSI) handleNFSNodePluginServiceAccount(instance *manilac
 		return err
 	}
 
-	// ServiceAccount already exists - don't requeue
-	reqLogger.Info("Skip reconcile: ServiceAccount already exists", "ServiceAccount.Namespace", found.Namespace, "ServiceAccount.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, sa)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating ServiceAccount with new changes", "ServiceAccount.Namespace", found.Namespace, "ServiceAccount.Name", found.Name)
+		err = r.client.Update(context.TODO(), sa)
+		if err != nil {
+			return err
+		}
+	} else {
+		// ServiceAccount already exists - don't requeue
+		reqLogger.Info("Skip reconcile: ServiceAccount already exists", "ServiceAccount.Namespace", found.Namespace, "ServiceAccount.Name", found.Name)
+	}
+
 	return nil
 }
 
@@ -120,8 +136,23 @@ func (r *ReconcileManilaCSI) handleNFSNodePluginClusterRole(instance *manilacsiv
 		return err
 	}
 
-	// ClusterRole already exists - don't requeue
-	reqLogger.Info("Skip reconcile: ClusterRole already exists", "ClusterRole.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, cr)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating ClusterRole with new changes", "ClusterRole.Name", found.Name)
+		err = r.client.Update(context.TODO(), cr)
+		if err != nil {
+			return err
+		}
+	} else {
+		// ClusterRole already exists - don't requeue
+		reqLogger.Info("Skip reconcile: ClusterRole already exists", "ClusterRole.Name", found.Name)
+	}
+
 	return nil
 }
 
@@ -164,7 +195,22 @@ func (r *ReconcileManilaCSI) handleNFSNodePluginClusterRoleBinding(instance *man
 		return err
 	}
 
-	// ClusterRoleBinding already exists - don't requeue
-	reqLogger.Info("Skip reconcile: ClusterRoleBinding already exists", "ClusterRoleBinding.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, crb)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating ClusterRoleBinding with new changes", "ClusterRoleBinding.Name", found.Name)
+		err = r.client.Update(context.TODO(), crb)
+		if err != nil {
+			return err
+		}
+	} else {
+		// ClusterRoleBinding already exists - don't requeue
+		reqLogger.Info("Skip reconcile: ClusterRoleBinding already exists", "ClusterRoleBinding.Name", found.Name)
+	}
+
 	return nil
 }

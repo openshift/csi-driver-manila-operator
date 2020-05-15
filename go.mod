@@ -3,7 +3,7 @@ module github.com/openshift/csi-driver-manila-operator
 go 1.13
 
 require (
-	github.com/banzaicloud/k8s-objectmatcher v1.3.2 // indirect
+	github.com/banzaicloud/k8s-objectmatcher v1.3.2
 	github.com/go-logr/logr v0.1.0
 	github.com/gophercloud/gophercloud v0.6.1-0.20191122030953-d8ac278c1c9d
 	github.com/gophercloud/utils v0.0.0-20200324021909-95fb81d3291f

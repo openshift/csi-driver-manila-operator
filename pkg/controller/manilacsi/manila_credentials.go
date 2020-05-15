@@ -3,6 +3,7 @@ package manilacsi
 import (
 	"context"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
@@ -21,13 +22,31 @@ const (
 )
 
 // createDriverCredentialsSecret converts the installer secret, if it is available, into the driver secret
-func (r *ReconcileManilaCSI) createDriverCredentialsSecret(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaCSI) createDriverCredentialsSecret(instance *manilacsiv1alpha1.ManilaCSI, cloudConfig clientconfig.Cloud, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Credentials")
+
+	secret := generateSecret(cloudConfig)
 
 	found := &corev1.Secret{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: driverSecretName, Namespace: secretNamespace}, found)
 	if err == nil {
-		reqLogger.Info("Skip reconcile: Secret already exists", "Secret.Namespace", found.Namespace, "Service.Name", found.Name)
+		// Check if we need to update the object
+		patchResult, err := patch.DefaultPatchMaker.Calculate(found, secret)
+		if err != nil {
+			return err
+		}
+
+		if !patchResult.IsEmpty() {
+			reqLogger.Info("Updating Secret with new changes", "Secret.Namespace", found.Namespace, "Secret.Name", found.Name)
+			err = r.client.Update(context.TODO(), secret)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Service already exists - don't requeue
+			reqLogger.Info("Skip reconcile: Secret already exists", "Secret.Namespace", found.Namespace, "Secret.Name", found.Name)
+		}
+
 		return nil
 	}
 
@@ -35,15 +54,9 @@ func (r *ReconcileManilaCSI) createDriverCredentialsSecret(instance *manilacsiv1
 		return err
 	}
 
-	// Check if the installer secret, created from the credentials request, exists
-	cloudConfig, err := r.getCloudFromSecret()
-	if err != nil {
-		return err
-	}
-
 	// Convert the installer secret into the driver secret
 	reqLogger.Info("Creating a new Secret", "Secret.Namespace", secretNamespace, "Secret.Name", driverSecretName)
-	err = r.client.Create(context.TODO(), generateSecret(cloudConfig))
+	err = r.client.Create(context.TODO(), secret)
 	if err != nil {
 		return err
 	}
