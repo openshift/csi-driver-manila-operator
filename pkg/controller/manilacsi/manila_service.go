@@ -3,6 +3,7 @@ package manilacsi
 import (
 	"context"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -63,7 +64,22 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginService(instance *manil
 		return err
 	}
 
-	// Service already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Service already exists", "Service.Namespace", found.Namespace, "Service.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, srv)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating Service with new changes", "Service.Namespace", found.Namespace, "Service.Name", found.Name)
+		err = r.client.Update(context.TODO(), srv)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Service already exists - don't requeue
+		reqLogger.Info("Skip reconcile: Service already exists", "Service.Namespace", found.Namespace, "Service.Name", found.Name)
+	}
+
 	return nil
 }

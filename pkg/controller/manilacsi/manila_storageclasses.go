@@ -3,6 +3,7 @@ package manilacsi
 import (
 	"context"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
@@ -53,20 +54,36 @@ func (r *ReconcileManilaCSI) handleManilaStorageClass(instance *manilacsiv1alpha
 	// Check if this StorageClass already exists
 	found := &storagev1.StorageClass{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: sc.Name, Namespace: ""}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new StorageClass", "StorageClass.Name", sc.Name)
-		err = r.client.Create(context.TODO(), sc)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	if err == nil {
+		// Check if we need to update the object
+		patchResult, err := patch.DefaultPatchMaker.Calculate(found, sc)
 		if err != nil {
 			return err
 		}
 
-		// StorageClass created successfully - don't requeue
-		return nil
-	} else if err != nil {
+		if !patchResult.IsEmpty() {
+			// StorageClass can't be updated directly, so we have to delete it and create again
+			reqLogger.Info("Deleting StorageClass", "StorageClass.Name", found.Name)
+			err = r.client.Delete(context.TODO(), found)
+			if err != nil {
+				return err
+			}
+		} else {
+			// StorageClass already exists - don't requeue
+			reqLogger.Info("Skip reconcile: StorageClass already exists", "StorageClass.Name", found.Name)
+			return nil
+		}
+	}
+
+	reqLogger.Info("Creating a new StorageClass", "StorageClass.Name", sc.Name)
+	err = r.client.Create(context.TODO(), sc)
+	if err != nil {
 		return err
 	}
 
-	// StorageClass already exists - don't requeue
-	reqLogger.Info("Skip reconcile: StorageClass already exists", "StorageClass.Name", found.Name)
 	return nil
 }

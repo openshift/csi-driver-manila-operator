@@ -129,8 +129,21 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
+	// Get the cloud credentials
+	cloud, err := r.getCloudFromSecret()
+	if err != nil && errors.IsNotFound(err) {
+		// It can take a while before the secret is created
+		if errors.IsNotFound(err) {
+			reqLogger.Info(fmt.Sprintf("No %v secret was found in %v namespace. Retrying...", installerSecretName, secretNamespace))
+			return reconcile.Result{
+				RequeueAfter: 10,
+			}, nil
+		}
+		return reconcile.Result{}, err
+	}
+
 	// Driver Secret
-	err = r.createDriverCredentialsSecret(instance, reqLogger)
+	err = r.createDriverCredentialsSecret(instance, cloud, reqLogger)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			reqLogger.Info(fmt.Sprintf("No %v secret was found in %v namespace. Retrying...", installerSecretName, secretNamespace))
@@ -139,7 +152,7 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	reqLogger.Info("Fetching Manila Share Types")
-	shareTypes, err := r.getManilaShareTypes(reqLogger)
+	shareTypes, err := r.getManilaShareTypes(cloud, reqLogger)
 	if err != nil {
 		if _, ok := err.(gophercloud.ErrDefault404); !ok {
 			return reconcile.Result{}, err
@@ -220,12 +233,7 @@ func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alph
 }
 
 // getManilaShareTypes returns all available share types
-func (r *ReconcileManilaCSI) getManilaShareTypes(reqLogger logr.Logger) ([]sharetypes.ShareType, error) {
-	cloud, err := r.getCloudFromSecret()
-	if err != nil {
-		return nil, err
-	}
-
+func (r *ReconcileManilaCSI) getManilaShareTypes(cloud clientconfig.Cloud, reqLogger logr.Logger) ([]sharetypes.ShareType, error) {
 	clientOpts := new(clientconfig.ClientOpts)
 
 	if cloud.AuthInfo != nil {

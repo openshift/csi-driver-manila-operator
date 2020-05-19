@@ -3,6 +3,7 @@ module github.com/openshift/csi-driver-manila-operator
 go 1.13
 
 require (
+	github.com/banzaicloud/k8s-objectmatcher v1.3.2
 	github.com/go-logr/logr v0.1.0
 	github.com/gophercloud/gophercloud v0.6.1-0.20191122030953-d8ac278c1c9d
 	github.com/gophercloud/utils v0.0.0-20200324021909-95fb81d3291f
@@ -11,8 +12,8 @@ require (
 	github.com/operator-framework/operator-sdk v0.15.1
 	github.com/spf13/pflag v1.0.5
 	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/api v0.0.0
-	k8s.io/apimachinery v0.0.0
+	k8s.io/api v0.17.4
+	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v12.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.4.0
 )

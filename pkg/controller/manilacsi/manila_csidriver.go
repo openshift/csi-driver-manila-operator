@@ -3,6 +3,7 @@ package manilacsi
 import (
 	"context"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	storagev1beta1 "k8s.io/api/storage/v1beta1"
@@ -47,7 +48,22 @@ func (r *ReconcileManilaCSI) handleManilaCSIDriver(instance *manilacsiv1alpha1.M
 		return err
 	}
 
-	// CSIDriver already exists - don't requeue
-	reqLogger.Info("Skip reconcile: CSIDriver already exists", "CSIDriver.Namespace", found.Namespace, "CSIDriver.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, driver)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating CSIDriver with new changes", "CSIDriver.Namespace", found.Namespace, "CSIDriver.Name", found.Name)
+		err = r.client.Update(context.TODO(), driver)
+		if err != nil {
+			return err
+		}
+	} else {
+		// CSIDriver already exists - don't requeue
+		reqLogger.Info("Skip reconcile: CSIDriver already exists", "CSIDriver.Namespace", found.Namespace, "CSIDriver.Name", found.Name)
+	}
+
 	return nil
 }

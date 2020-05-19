@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	securityv1 "github.com/openshift/api/security/v1"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
@@ -76,8 +77,23 @@ func (r *ReconcileManilaCSI) handleSecurityContextConstraints(instance *manilacs
 		return err
 	}
 
-	// Security Context Constraints already exists - don't requeue
-	reqLogger.Info("Skip reconcile: SecurityContextConstraints already exists", "SecurityContextConstraints.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, scc)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating SecurityContextConstraints with new changes", "SecurityContextConstraints.Name", found.Name)
+		err = r.client.Update(context.TODO(), scc)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Security Context Constraints already exists - don't requeue
+		reqLogger.Info("Skip reconcile: SecurityContextConstraints already exists", "SecurityContextConstraints.Name", found.Name)
+	}
+
 	return nil
 }
 

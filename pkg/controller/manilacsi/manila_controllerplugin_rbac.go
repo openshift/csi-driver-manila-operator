@@ -3,6 +3,7 @@ package manilacsi
 import (
 	"context"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -83,8 +84,23 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginServiceAccount(instance
 		return err
 	}
 
-	// ServiceAccount already exists - don't requeue
-	reqLogger.Info("Skip reconcile: ServiceAccount already exists", "ServiceAccount.Namespace", found.Namespace, "ServiceAccount.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, sa)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating ServiceAccount with new changes", "ServiceAccount.Namespace", found.Namespace, "ServiceAccount.Name", found.Name)
+		err = r.client.Update(context.TODO(), sa)
+		if err != nil {
+			return err
+		}
+	} else {
+		// ServiceAccount already exists - don't requeue
+		reqLogger.Info("Skip reconcile: ServiceAccount already exists", "ServiceAccount.Namespace", found.Namespace, "ServiceAccount.Name", found.Name)
+	}
+
 	return nil
 }
 
@@ -177,8 +193,23 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginClusterRole(instance *m
 		return err
 	}
 
-	// ClusterRole already exists - don't requeue
-	reqLogger.Info("Skip reconcile: ClusterRole already exists", "ClusterRole.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, cr)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating ClusterRole with new changes", "ClusterRole.Name", found.Name)
+		err = r.client.Update(context.TODO(), cr)
+		if err != nil {
+			return err
+		}
+	} else {
+		// ClusterRole already exists - don't requeue
+		reqLogger.Info("Skip reconcile: ClusterRole already exists", "ClusterRole.Name", found.Name)
+	}
+
 	return nil
 }
 
@@ -221,8 +252,23 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginClusterRoleBinding(inst
 		return err
 	}
 
-	// ClusterRoleBinding already exists - don't requeue
-	reqLogger.Info("Skip reconcile: ClusterRoleBinding already exists", "ClusterRoleBinding.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, crb)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating ClusterRoleBinding with new changes", "ClusterRoleBinding.Name", found.Name)
+		err = r.client.Update(context.TODO(), crb)
+		if err != nil {
+			return err
+		}
+	} else {
+		// ClusterRoleBinding already exists - don't requeue
+		reqLogger.Info("Skip reconcile: ClusterRoleBinding already exists", "ClusterRoleBinding.Name", found.Name)
+	}
+
 	return nil
 }
 
@@ -266,8 +312,23 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginRole(instance *manilacs
 		return err
 	}
 
-	// Role already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Role already exists", "Role.Namespace", found.Namespace, "Role.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, role)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating Role with new changes", "Role.Namespace", found.Namespace, "Role.Name", found.Name)
+		err = r.client.Update(context.TODO(), role)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Role already exists - don't requeue
+		reqLogger.Info("Skip reconcile: Role already exists", "Role.Namespace", found.Namespace, "Role.Name", found.Name)
+	}
+
 	return nil
 }
 
@@ -311,7 +372,22 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginRoleBinding(instance *m
 		return err
 	}
 
-	// RoleBinding already exists - don't requeue
-	reqLogger.Info("Skip reconcile: RoleBinding already exists", "RoleBinding.Namespace", found.Namespace, "RoleBinding.Name", found.Name)
+	// Check if we need to update the object
+	patchResult, err := patch.DefaultPatchMaker.Calculate(found, rb)
+	if err != nil {
+		return err
+	}
+
+	if !patchResult.IsEmpty() {
+		reqLogger.Info("Updating RoleBinding with new changes", "RoleBinding.Namespace", found.Namespace, "RoleBinding.Name", found.Name)
+		err = r.client.Update(context.TODO(), rb)
+		if err != nil {
+			return err
+		}
+	} else {
+		// RoleBinding already exists - don't requeue
+		reqLogger.Info("Skip reconcile: RoleBinding already exists", "RoleBinding.Namespace", found.Namespace, "RoleBinding.Name", found.Name)
+	}
+
 	return nil
 }
