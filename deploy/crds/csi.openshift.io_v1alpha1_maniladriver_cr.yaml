@@ -1,5 +1,5 @@
-apiVersion: manilacsi.openshift.io/v1alpha1
-kind: ManilaCSI
+apiVersion: csi.openshift.io/v1alpha1
+kind: ManilaDriver
 metadata:
   name: example-manilacsi
   namespace: manila-csi

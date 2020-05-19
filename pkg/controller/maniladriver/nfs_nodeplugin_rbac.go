@@ -1,11 +1,11 @@
-package manilacsi
+package maniladriver
 
 import (
 	"context"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
-	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -14,29 +14,29 @@ import (
 )
 
 var (
-	labelsManilaNodePlugin = map[string]string{
+	labelsNFSNodePlugin = map[string]string{
 		"app":       "openstack-manila-csi",
-		"component": "nodeplugin",
+		"component": "nfs-nodeplugin",
 	}
 )
 
-func (r *ReconcileManilaCSI) handleManilaNodePluginRBAC(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
-	reqLogger.Info("Reconciling Manila Node Plugin RBAC resources")
+func (r *ReconcileManilaDriver) handleNFSNodePluginRBAC(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
+	reqLogger.Info("Reconciling NFS Node Plugin RBAC resources")
 
-	// Manila Node Plugin Service Account
-	err := r.handleManilaNodePluginServiceAccount(instance, reqLogger)
+	// NFS Node Plugin Service Account
+	err := r.handleNFSNodePluginServiceAccount(instance, reqLogger)
 	if err != nil {
 		return err
 	}
 
-	// Manila Node Plugin Cluster Role
-	err = r.handleManilaNodePluginClusterRole(instance, reqLogger)
+	// NFS Node Plugin Cluster Role
+	err = r.handleNFSNodePluginClusterRole(instance, reqLogger)
 	if err != nil {
 		return err
 	}
 
-	// Manila Node Plugin Cluster Role Binding
-	err = r.handleManilaNodePluginClusterRoleBinding(instance, reqLogger)
+	// NFS Node Plugin Cluster Role Binding
+	err = r.handleNFSNodePluginClusterRoleBinding(instance, reqLogger)
 	if err != nil {
 		return err
 	}
@@ -44,15 +44,15 @@ func (r *ReconcileManilaCSI) handleManilaNodePluginRBAC(instance *manilacsiv1alp
 	return nil
 }
 
-func (r *ReconcileManilaCSI) handleManilaNodePluginServiceAccount(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
-	reqLogger.Info("Reconciling Manila Node Plugin Service Account")
+func (r *ReconcileManilaDriver) handleNFSNodePluginServiceAccount(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
+	reqLogger.Info("Reconciling NFS Node Plugin Service Account")
 
 	// Define a new ServiceAccount object
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "openstack-manila-csi-nodeplugin",
+			Name:      "csi-nodeplugin",
 			Namespace: "manila-csi",
-			Labels:    labelsManilaNodePlugin,
+			Labels:    labelsNFSNodePlugin,
 		},
 	}
 
@@ -92,34 +92,29 @@ func (r *ReconcileManilaCSI) handleManilaNodePluginServiceAccount(instance *mani
 	return nil
 }
 
-func (r *ReconcileManilaCSI) handleManilaNodePluginClusterRole(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
-	reqLogger.Info("Reconciling Manila Node Plugin Cluster Role")
+func (r *ReconcileManilaDriver) handleNFSNodePluginClusterRole(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
+	reqLogger.Info("Reconciling NFS Node Plugin Cluster Role")
 
 	// Define a new ClusterRole object
 	cr := &rbacv1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "openstack-manila-csi-nodeplugin",
-			Labels: labelsManilaNodePlugin,
+			Name:   "csi-nodeplugin",
+			Labels: labelsNFSNodePlugin,
 		},
 		Rules: []rbacv1.PolicyRule{
 			{
 				APIGroups: []string{""},
-				Resources: []string{"configmaps"},
-				Verbs:     []string{"get", "list"},
+				Resources: []string{"persistentvolumes"},
+				Verbs:     []string{"get", "list", "watch", "update"},
 			},
 			{
 				APIGroups: []string{""},
 				Resources: []string{"nodes"},
-				Verbs:     []string{"get", "list", "update"},
+				Verbs:     []string{"get", "list", "watch", "update"},
 			},
 			{
-				APIGroups: []string{""},
-				Resources: []string{"namespaces"},
-				Verbs:     []string{"get", "list"},
-			},
-			{
-				APIGroups: []string{""},
-				Resources: []string{"persistentvolumes"},
+				APIGroups: []string{"storage.k8s.io"},
+				Resources: []string{"volumeattachments"},
 				Verbs:     []string{"get", "list", "watch", "update"},
 			},
 		},
@@ -161,25 +156,25 @@ func (r *ReconcileManilaCSI) handleManilaNodePluginClusterRole(instance *manilac
 	return nil
 }
 
-func (r *ReconcileManilaCSI) handleManilaNodePluginClusterRoleBinding(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
-	reqLogger.Info("Reconciling Manila Node Plugin Cluster Role Binding")
+func (r *ReconcileManilaDriver) handleNFSNodePluginClusterRoleBinding(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
+	reqLogger.Info("Reconciling NFS Node Plugin Cluster Role Binding")
 
 	// Define a new ClusterRoleBinding object
 	crb := &rbacv1.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "openstack-manila-csi-nodeplugin",
-			Labels: labelsManilaNodePlugin,
+			Name:   "csi-nodeplugin",
+			Labels: labelsNFSNodePlugin,
 		},
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
-				Name:      "openstack-manila-csi-nodeplugin",
+				Name:      "csi-nodeplugin",
 				Namespace: "manila-csi",
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
 			Kind:     "ClusterRole",
-			Name:     "openstack-manila-csi-nodeplugin",
+			Name:     "csi-nodeplugin",
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 	}

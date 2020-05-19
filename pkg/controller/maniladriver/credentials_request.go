@@ -1,4 +1,4 @@
-package manilacsi
+package maniladriver
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	credsv1 "github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1"
-	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcileManilaCSI) handleCredentialsRequest(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleCredentialsRequest(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Credentials Request")
 
 	// Define a new Credential Request object

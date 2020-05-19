@@ -1,4 +1,4 @@
-package manilacsi
+package maniladriver
 
 import (
 	"os"

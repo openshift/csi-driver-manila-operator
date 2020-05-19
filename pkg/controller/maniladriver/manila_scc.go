@@ -1,4 +1,4 @@
-package manilacsi
+package maniladriver
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	securityv1 "github.com/openshift/api/security/v1"
-	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
@@ -52,7 +52,7 @@ volumes:
 `
 )
 
-func (r *ReconcileManilaCSI) handleSecurityContextConstraints(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleSecurityContextConstraints(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Security Context Constraints")
 
 	// Define a new Security Context Constraints object

@@ -1,4 +1,4 @@
-package manilacsi
+package maniladriver
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/utils/openstack/clientconfig"
-	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +22,7 @@ const (
 )
 
 // createDriverCredentialsSecret converts the installer secret, if it is available, into the driver secret
-func (r *ReconcileManilaCSI) createDriverCredentialsSecret(instance *manilacsiv1alpha1.ManilaCSI, cloudConfig clientconfig.Cloud, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) createDriverCredentialsSecret(instance *maniladriverv1alpha1.ManilaDriver, cloudConfig clientconfig.Cloud, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Credentials")
 
 	secret := generateSecret(cloudConfig)

@@ -1,4 +1,4 @@
-package manilacsi
+package maniladriver
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	securityv1 "github.com/openshift/api/security/v1"
 	credsv1 "github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1"
-	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -30,9 +30,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_manilacsi")
+var log = logf.Log.WithName("controller_maniladriver")
 
-// Add creates a new ManilaCSI Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new ManilaDriver Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
@@ -40,19 +40,19 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileManilaCSI{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileManilaDriver{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("manilacsi-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("maniladriver-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource ManilaCSI
-	err = c.Watch(&source.Kind{Type: &manilacsiv1alpha1.ManilaCSI{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource ManilaDriver
+	err = c.Watch(&source.Kind{Type: &maniladriverv1alpha1.ManilaDriver{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	ownerHandler := &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &manilacsiv1alpha1.ManilaCSI{},
+		OwnerType:    &maniladriverv1alpha1.ManilaDriver{},
 	}
 
 	for _, watchObject := range watchOwnedObjects {
@@ -89,27 +89,27 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-// blank assignment to verify that ReconcileManilaCSI implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileManilaCSI{}
+// blank assignment to verify that ReconcileManilaDriver implements reconcile.Reconciler
+var _ reconcile.Reconciler = &ReconcileManilaDriver{}
 
-// ReconcileManilaCSI reconciles a ManilaCSI object
-type ReconcileManilaCSI struct {
+// ReconcileManilaDriver reconciles a ManilaDriver object
+type ReconcileManilaDriver struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a ManilaCSI object and makes changes based on the state read
-// and what is in the ManilaCSI.Spec
+// Reconcile reads that state of the cluster for a ManilaDriver object and makes changes based on the state read
+// and what is in the ManilaDriver.Spec
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling ManilaCSI")
+	reqLogger.Info("Reconciling ManilaDriver")
 
-	// Fetch the ManilaCSI instance
-	instance := &manilacsiv1alpha1.ManilaCSI{}
+	// Fetch the ManilaDriver instance
+	instance := &maniladriverv1alpha1.ManilaDriver{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -168,12 +168,12 @@ func (r *ReconcileManilaCSI) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	// Manage objects created by the operator
-	return r.handleManilaCSIDeployment(instance, reqLogger)
+	return r.handleManilariverDeployment(instance, reqLogger)
 }
 
 // Manage the Objects created by the Operator.
-func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) (reconcile.Result, error) {
-	reqLogger.Info("Reconciling ManilaCSI Deployment Objects")
+func (r *ReconcileManilaDriver) handleManilariverDeployment(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) (reconcile.Result, error) {
+	reqLogger.Info("Reconciling ManilaDriver Deployment Objects")
 
 	// Security Context Constraints
 	err := r.handleSecurityContextConstraints(instance, reqLogger)
@@ -233,7 +233,7 @@ func (r *ReconcileManilaCSI) handleManilaCSIDeployment(instance *manilacsiv1alph
 }
 
 // getManilaShareTypes returns all available share types
-func (r *ReconcileManilaCSI) getManilaShareTypes(cloud clientconfig.Cloud, reqLogger logr.Logger) ([]sharetypes.ShareType, error) {
+func (r *ReconcileManilaDriver) getManilaShareTypes(cloud clientconfig.Cloud, reqLogger logr.Logger) ([]sharetypes.ShareType, error) {
 	clientOpts := new(clientconfig.ClientOpts)
 
 	if cloud.AuthInfo != nil {
@@ -274,7 +274,7 @@ func (r *ReconcileManilaCSI) getManilaShareTypes(cloud clientconfig.Cloud, reqLo
 }
 
 // getCloudFromSecret extract a Cloud from the given namespace:secretName
-func (r *ReconcileManilaCSI) getCloudFromSecret() (clientconfig.Cloud, error) {
+func (r *ReconcileManilaDriver) getCloudFromSecret() (clientconfig.Cloud, error) {
 	ctx := context.TODO()
 	emptyCloud := clientconfig.Cloud{}
 

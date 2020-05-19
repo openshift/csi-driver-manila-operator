@@ -68,7 +68,7 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - manilacsi.openshift.io
+  - csi.openshift.io
   resources:
   - '*'
   verbs:

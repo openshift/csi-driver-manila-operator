@@ -1,4 +1,4 @@
-package manilacsi
+package maniladriver
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
-	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,7 +17,7 @@ const (
 	storageClassNamePrefix = "csi-manila-"
 )
 
-func (r *ReconcileManilaCSI) handleManilaStorageClasses(instance *manilacsiv1alpha1.ManilaCSI, shareTypes []sharetypes.ShareType, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleManilaStorageClasses(instance *maniladriverv1alpha1.ManilaDriver, shareTypes []sharetypes.ShareType, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila StorageClasses")
 
 	for _, shareType := range shareTypes {
@@ -30,7 +30,7 @@ func (r *ReconcileManilaCSI) handleManilaStorageClasses(instance *manilacsiv1alp
 	return nil
 }
 
-func (r *ReconcileManilaCSI) handleManilaStorageClass(instance *manilacsiv1alpha1.ManilaCSI, shareType sharetypes.ShareType, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleManilaStorageClass(instance *maniladriverv1alpha1.ManilaDriver, shareType sharetypes.ShareType, reqLogger logr.Logger) error {
 	storageClassName := storageClassNamePrefix + shareType.Name
 	reqLogger.Info("Reconciling Manila StorageClass", "StorageClass.Name", storageClassName)
 
