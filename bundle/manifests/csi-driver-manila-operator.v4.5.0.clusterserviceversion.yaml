@@ -453,9 +453,9 @@ spec:
                 serviceAccountName: csi-driver-manila-operator
   installModes:
     - type: OwnNamespace
-      supported: true
+      supported: false
     - type: SingleNamespace
-      supported: true
+      supported: false
     - type: MultiNamespace
       supported: false
     - type: AllNamespaces
