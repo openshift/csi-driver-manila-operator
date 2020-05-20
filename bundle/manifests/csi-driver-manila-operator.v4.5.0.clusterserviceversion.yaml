@@ -17,6 +17,7 @@ metadata:
     support: Red Hat
     capabilities: Seamless Upgrades
     repository: 'https://github.com/openshift/csi-driver-manila-operator'
+    "operatorframework.io/suggested-namespace": openshift-manila-csi-driver-operator
 spec:
   displayName: CSI Driver Manila Operator
   description: >+
