@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	"github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 )
 
 func init() {

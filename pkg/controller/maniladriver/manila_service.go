@@ -1,11 +1,11 @@
-package manilacsi
+package maniladriver
 
 import (
 	"context"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
-	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (r *ReconcileManilaCSI) handleManilaControllerPluginService(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleManilaControllerPluginService(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Controller Plugin Service")
 
 	var labels = map[string]string{
@@ -43,7 +43,7 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginService(instance *manil
 		},
 	}
 
-	// Set ManilaCSI instance as the owner and controller
+	// Set ManilaDriver instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, srv, r.scheme); err != nil {
 		return err
 	}

@@ -5,7 +5,7 @@ metadata:
   namespace: manila-csi
   annotations:
     alm-examples: >-
-      [{"apiVersion":"manilacsi.openshift.io/v1alpha1","kind":"ManilaCSI","metadata":{"name":"example-manilacsi","namespace":"manila-csi"}},{"apiVersion":"manilacsi.openshift.io/v1alpha1","kind":"ManilaCSI","metadata":{"name":"example-manilacsi","namespace":"manila-csi"}}]
+      [{"apiVersion":"csi.openshift.io/v1alpha1","kind":"ManilaDriver","metadata":{"name":"example-manilacsi","namespace":"manila-csi"}},{"apiVersion":"csi.openshift.io/v1alpha1","kind":"ManilaDriver","metadata":{"name":"example-manilacsi","namespace":"manila-csi"}}]
     categories: Storage
     certified: 'false'
     createdAt: 'Tue Mar 17 17:27:30 CET 2020'
@@ -64,10 +64,10 @@ spec:
       mediatype: image/png
   customresourcedefinitions:
     owned:
-      - description: ManilaCSI is the Schema for the manilacsis API
-        kind: ManilaCSI
-        displayName: ManilaCSI
-        name: manilacsis.manilacsi.openshift.io
+      - description: ManilaDriver is the Schema for the maniladrivers API
+        kind: ManilaDriver
+        displayName: ManilaDriver
+        name: maniladrivers.csi.openshift.io
         version: v1alpha1
         specDescriptors: []
         statusDescriptors: []
@@ -153,7 +153,7 @@ spec:
               verbs:
                 - get
             - apiGroups:
-                - manilacsi.openshift.io
+                - csi.openshift.io
               resources:
                 - '*'
               verbs:

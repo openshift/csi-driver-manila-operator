@@ -1,11 +1,11 @@
-package manilacsi
+package maniladriver
 
 import (
 	"context"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
-	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -20,7 +20,7 @@ var (
 	}
 )
 
-func (r *ReconcileManilaCSI) handleManilaControllerPluginRBAC(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleManilaControllerPluginRBAC(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Controller Plugin RBAC resources")
 
 	// Manila Controller Plugin Service Account
@@ -56,7 +56,7 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginRBAC(instance *manilacs
 	return nil
 }
 
-func (r *ReconcileManilaCSI) handleManilaControllerPluginServiceAccount(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleManilaControllerPluginServiceAccount(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Controller Plugin Service Account")
 
 	// Define a new ServiceAccount object
@@ -104,7 +104,7 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginServiceAccount(instance
 	return nil
 }
 
-func (r *ReconcileManilaCSI) handleManilaControllerPluginClusterRole(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleManilaControllerPluginClusterRole(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Controller Plugin Cluster Role")
 
 	// Define a new ClusterRole object
@@ -213,7 +213,7 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginClusterRole(instance *m
 	return nil
 }
 
-func (r *ReconcileManilaCSI) handleManilaControllerPluginClusterRoleBinding(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleManilaControllerPluginClusterRoleBinding(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Controller Plugin Cluster Role Binding")
 
 	// Define a new ClusterRoleBinding object
@@ -272,7 +272,7 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginClusterRoleBinding(inst
 	return nil
 }
 
-func (r *ReconcileManilaCSI) handleManilaControllerPluginRole(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleManilaControllerPluginRole(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Controller Plugin Role")
 
 	// Define a new Role object
@@ -332,7 +332,7 @@ func (r *ReconcileManilaCSI) handleManilaControllerPluginRole(instance *manilacs
 	return nil
 }
 
-func (r *ReconcileManilaCSI) handleManilaControllerPluginRoleBinding(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleManilaControllerPluginRoleBinding(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Controller Plugin Role Binding")
 
 	// Define a new RoleBinding object

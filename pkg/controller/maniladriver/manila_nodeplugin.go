@@ -1,11 +1,11 @@
-package manilacsi
+package maniladriver
 
 import (
 	"context"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
-	manilacsiv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/manilacsi/v1alpha1"
+	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcileManilaCSI) handleManilaNodePluginDaemonSet(instance *manilacsiv1alpha1.ManilaCSI, reqLogger logr.Logger) error {
+func (r *ReconcileManilaDriver) handleManilaNodePluginDaemonSet(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Node Plugin DaemonSet")
 
 	// Define a new DaemonSet object
