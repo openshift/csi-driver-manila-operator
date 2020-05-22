@@ -10,7 +10,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func (r *ReconcileManilaDriver) handleManilaControllerPluginService(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
@@ -29,7 +28,7 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginService(instance *ma
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
-			Namespace: "manila-csi",
+			Namespace: "openshift-manila-csi-driver",
 			Labels:    labels,
 		},
 		Spec: corev1.ServiceSpec{
@@ -43,14 +42,9 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginService(instance *ma
 		},
 	}
 
-	// Set ManilaDriver instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, srv, r.scheme); err != nil {
-		return err
-	}
-
 	// Check if this Service already exists
 	found := &corev1.Service{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: srv.Name, Namespace: srv.Namespace}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: srv.Name, Namespace: srv.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Service", "Service.Namespace", srv.Namespace, "Service.Name", srv.Name)
 		err = r.client.Create(context.TODO(), srv)
@@ -71,6 +65,9 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginService(instance *ma
 	}
 
 	if !patchResult.IsEmpty() {
+		// Workaround for https://github.com/kubernetes/kubernetes/issues/70674
+		srv.ObjectMeta.ResourceVersion = found.ObjectMeta.ResourceVersion
+
 		reqLogger.Info("Updating Service with new changes", "Service.Namespace", found.Namespace, "Service.Name", found.Name)
 		err = r.client.Update(context.TODO(), srv)
 		if err != nil {

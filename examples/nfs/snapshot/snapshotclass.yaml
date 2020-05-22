@@ -5,4 +5,4 @@ metadata:
 snapshotter: manila.csi.openstack.org
 parameters:
   csi.storage.k8s.io/snapshotter-secret-name: csi-manila-secrets
-  csi.storage.k8s.io/snapshotter-secret-namespace: manila-csi
+  csi.storage.k8s.io/snapshotter-secret-namespace: openshift-manila-csi-driver

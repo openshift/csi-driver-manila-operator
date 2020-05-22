@@ -40,7 +40,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileManilaDriver{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileManilaDriver{client: mgr.GetClient(), scheme: mgr.GetScheme(), apiReader: mgr.GetAPIReader()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -61,6 +61,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	watchOwnedObjects := []runtime.Object{
 		&appsv1.StatefulSet{},
 		&appsv1.DaemonSet{},
+		&corev1.Namespace{},
 		&corev1.Secret{},
 		&corev1.Service{},
 		&storagev1beta1.CSIDriver{},
@@ -96,8 +97,9 @@ var _ reconcile.Reconciler = &ReconcileManilaDriver{}
 type ReconcileManilaDriver struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client    client.Client
+	scheme    *runtime.Scheme
+	apiReader client.Reader
 }
 
 // Reconcile reads that state of the cluster for a ManilaDriver object and makes changes based on the state read
@@ -110,7 +112,7 @@ func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.
 
 	// Fetch the ManilaDriver instance
 	instance := &maniladriverv1alpha1.ManilaDriver{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	err := r.apiReader.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -123,6 +125,12 @@ func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.
 		return reconcile.Result{}, err
 	}
 
+	// Manila Driver Namespace
+	err = r.handleManilaDriverNamespace(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// Credentials Request
 	err = r.handleCredentialsRequest(instance, reqLogger)
 	if err != nil {
@@ -131,7 +139,7 @@ func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.
 
 	// Get the cloud credentials
 	cloud, err := r.getCloudFromSecret()
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil {
 		// It can take a while before the secret is created
 		if errors.IsNotFound(err) {
 			reqLogger.Info(fmt.Sprintf("No %v secret was found in %v namespace. Retrying...", installerSecretName, secretNamespace))
@@ -145,9 +153,6 @@ func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.
 	// Driver Secret
 	err = r.createDriverCredentialsSecret(instance, cloud, reqLogger)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			reqLogger.Info(fmt.Sprintf("No %v secret was found in %v namespace. Retrying...", installerSecretName, secretNamespace))
-		}
 		return reconcile.Result{}, err
 	}
 
@@ -279,7 +284,7 @@ func (r *ReconcileManilaDriver) getCloudFromSecret() (clientconfig.Cloud, error)
 	emptyCloud := clientconfig.Cloud{}
 
 	secret := &corev1.Secret{}
-	err := r.client.Get(ctx, types.NamespacedName{
+	err := r.apiReader.Get(ctx, types.NamespacedName{
 		Namespace: secretNamespace,
 		Name:      installerSecretName,
 	}, secret)

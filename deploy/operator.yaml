@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: csi-driver-manila-operator
-  namespace: manila-csi
+  namespace: openshift-manila-csi-driver-operator
 spec:
   replicas: 1
   selector:

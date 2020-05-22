@@ -26,7 +26,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: csi-manila-secrets
-  namespace: manila-csi
+  namespace: openshift-manila-csi-driver
 stringData:
   # Mandatory
   os-authURL: "http://example.com/identity"

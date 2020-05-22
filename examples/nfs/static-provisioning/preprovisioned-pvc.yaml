@@ -14,10 +14,10 @@ spec:
     volumeHandle: preprovisioned-nfs-share
     nodeStageSecretRef:
       name: csi-manila-secrets
-      namespace: manila-csi
+      namespace: openshift-manila-csi-driver
     nodePublishSecretRef:
       name: csi-manila-secrets
-      namespace: manila-csi
+      namespace: openshift-manila-csi-driver
     volumeAttributes:
       shareID: SHARE-UUID-GOES-HERE
       shareAccessID: ACCESS-UUID-OF-THE-SHARE

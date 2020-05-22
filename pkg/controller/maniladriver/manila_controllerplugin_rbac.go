@@ -63,14 +63,14 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginServiceAccount(insta
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
-			Namespace: "manila-csi",
+			Namespace: "openshift-manila-csi-driver",
 			Labels:    labelsManilaControllerPlugin,
 		},
 	}
 
 	// Check if this ServiceAccount already exists
 	found := &corev1.ServiceAccount{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: sa.Name, Namespace: sa.Namespace}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: sa.Name, Namespace: sa.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ServiceAccount", "ServiceAccount.Namespace", sa.Namespace, "ServiceAccount.Name", sa.Name)
 		err = r.client.Create(context.TODO(), sa)
@@ -179,7 +179,7 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginClusterRole(instance
 
 	// Check if this ClusterRole already exists
 	found := &rbacv1.ClusterRole{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: cr.Name, Namespace: ""}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: cr.Name, Namespace: ""}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ClusterRole", "ClusterRole.Name", cr.Name)
 		err = r.client.Create(context.TODO(), cr)
@@ -226,7 +226,7 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginClusterRoleBinding(i
 			{
 				Kind:      "ServiceAccount",
 				Name:      "openstack-manila-csi-controllerplugin",
-				Namespace: "manila-csi",
+				Namespace: "openshift-manila-csi-driver",
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
@@ -238,7 +238,7 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginClusterRoleBinding(i
 
 	// Check if this ClusterRoleBinding already exists
 	found := &rbacv1.ClusterRoleBinding{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: crb.Name, Namespace: ""}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: crb.Name, Namespace: ""}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ClusterRoleBinding", "ClusterRoleBinding.Name", crb.Name)
 		err = r.client.Create(context.TODO(), crb)
@@ -279,7 +279,7 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginRole(instance *manil
 	role := &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
-			Namespace: "manila-csi",
+			Namespace: "openshift-manila-csi-driver",
 			Labels:    labelsManilaControllerPlugin,
 		},
 		Rules: []rbacv1.PolicyRule{
@@ -298,7 +298,7 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginRole(instance *manil
 
 	// Check if this Role already exists
 	found := &rbacv1.Role{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: role.Name, Namespace: role.Namespace}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: role.Name, Namespace: role.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Role", "Role.Namespace", role.Namespace, "Role.Name", role.Name)
 		err = r.client.Create(context.TODO(), role)
@@ -339,14 +339,14 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginRoleBinding(instance
 	rb := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
-			Namespace: "manila-csi",
+			Namespace: "openshift-manila-csi-driver",
 			Labels:    labelsManilaControllerPlugin,
 		},
 		Subjects: []rbacv1.Subject{
 			{
 				Kind:      "ServiceAccount",
 				Name:      "openstack-manila-csi-controllerplugin",
-				Namespace: "manila-csi",
+				Namespace: "openshift-manila-csi-driver",
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
@@ -358,7 +358,7 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginRoleBinding(instance
 
 	// Check if this RoleBinding already exists
 	found := &rbacv1.RoleBinding{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: rb.Name, Namespace: rb.Namespace}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: rb.Name, Namespace: rb.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new RoleBinding", "RoleBinding.Namespace", rb.Namespace, "RoleBinding.Name", rb.Name)
 		err = r.client.Create(context.TODO(), rb)

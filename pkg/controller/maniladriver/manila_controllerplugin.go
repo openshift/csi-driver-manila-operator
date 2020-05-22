@@ -11,7 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func (r *ReconcileManilaDriver) handleManilaControllerPluginStatefulSet(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
@@ -20,14 +19,9 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginStatefulSet(instance
 	// Define a new StatefulSet object
 	ss := generateManilaControllerPluginStatefulSet()
 
-	// Set ManilaDriver instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, ss, r.scheme); err != nil {
-		return err
-	}
-
 	// Check if this StatefulSet already exists
 	found := &appsv1.StatefulSet{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ss.Name, Namespace: ss.Namespace}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: ss.Name, Namespace: ss.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new StatefulSet", "StatefulSet.Namespace", ss.Namespace, "StatefulSet.Name", ss.Name)
 		err = r.client.Create(context.TODO(), ss)
@@ -76,7 +70,7 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-controllerplugin",
-			Namespace: "manila-csi",
+			Namespace: "openshift-manila-csi-driver",
 			Labels:    labelsManilaControllerPlugin,
 		},
 		Spec: appsv1.StatefulSetSpec{

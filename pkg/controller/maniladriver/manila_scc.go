@@ -36,9 +36,9 @@ fsGroup:
 supplementalGroups:
   type: RunAsAny
 users:
-- system:serviceaccount:manila-csi:csi-nodeplugin
-- system:serviceaccount:manila-csi:openstack-manila-csi-controllerplugin
-- system:serviceaccount:manila-csi:openstack-manila-csi-nodeplugin
+- system:serviceaccount:openshift-manila-csi-driver:csi-nodeplugin
+- system:serviceaccount:openshift-manila-csi-driver:openstack-manila-csi-controllerplugin
+- system:serviceaccount:openshift-manila-csi-driver:openstack-manila-csi-nodeplugin
 groups: []
 volumes:
 - configMap
@@ -63,7 +63,7 @@ func (r *ReconcileManilaDriver) handleSecurityContextConstraints(instance *manil
 
 	// Check if this Security Context Constraints already exists
 	found := &securityv1.SecurityContextConstraints{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: scc.Name, Namespace: ""}, found)
+	err = r.apiReader.Get(context.TODO(), types.NamespacedName{Name: scc.Name, Namespace: ""}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new SecurityContextConstraints", "SecurityContextConstraints.Name", scc.Name)
 		err = r.client.Create(context.TODO(), scc)
@@ -78,12 +78,16 @@ func (r *ReconcileManilaDriver) handleSecurityContextConstraints(instance *manil
 	}
 
 	// Check if we need to update the object
+	found.TypeMeta = scc.TypeMeta
 	patchResult, err := patch.DefaultPatchMaker.Calculate(found, scc)
 	if err != nil {
 		return err
 	}
 
 	if !patchResult.IsEmpty() {
+		// Workaround for https://github.com/kubernetes/kubernetes/issues/70674
+		scc.ObjectMeta.ResourceVersion = found.ObjectMeta.ResourceVersion
+
 		reqLogger.Info("Updating SecurityContextConstraints with new changes", "SecurityContextConstraints.Name", found.Name)
 		err = r.client.Update(context.TODO(), scc)
 		if err != nil {

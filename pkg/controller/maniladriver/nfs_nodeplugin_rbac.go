@@ -51,14 +51,14 @@ func (r *ReconcileManilaDriver) handleNFSNodePluginServiceAccount(instance *mani
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "csi-nodeplugin",
-			Namespace: "manila-csi",
+			Namespace: "openshift-manila-csi-driver",
 			Labels:    labelsNFSNodePlugin,
 		},
 	}
 
 	// Check if this ServiceAccount already exists
 	found := &corev1.ServiceAccount{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: sa.Name, Namespace: sa.Namespace}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: sa.Name, Namespace: sa.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ServiceAccount", "ServiceAccount.Namespace", sa.Namespace, "ServiceAccount.Name", sa.Name)
 		err = r.client.Create(context.TODO(), sa)
@@ -122,7 +122,7 @@ func (r *ReconcileManilaDriver) handleNFSNodePluginClusterRole(instance *manilad
 
 	// Check if this ClusterRole already exists
 	found := &rbacv1.ClusterRole{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: cr.Name, Namespace: ""}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: cr.Name, Namespace: ""}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ClusterRole", "ClusterRole.Name", cr.Name)
 		err = r.client.Create(context.TODO(), cr)
@@ -169,7 +169,7 @@ func (r *ReconcileManilaDriver) handleNFSNodePluginClusterRoleBinding(instance *
 			{
 				Kind:      "ServiceAccount",
 				Name:      "csi-nodeplugin",
-				Namespace: "manila-csi",
+				Namespace: "openshift-manila-csi-driver",
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
@@ -181,7 +181,7 @@ func (r *ReconcileManilaDriver) handleNFSNodePluginClusterRoleBinding(instance *
 
 	// Check if this ClusterRoleBinding already exists
 	found := &rbacv1.ClusterRoleBinding{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: crb.Name, Namespace: ""}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: crb.Name, Namespace: ""}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new ClusterRoleBinding", "ClusterRoleBinding.Name", crb.Name)
 		err = r.client.Create(context.TODO(), crb)
