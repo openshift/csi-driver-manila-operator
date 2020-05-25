@@ -3,7 +3,6 @@ package maniladriver
 import (
 	"context"
 
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	credsv1 "github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1"
 	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
@@ -19,6 +18,10 @@ func (r *ReconcileManilaDriver) handleCredentialsRequest(instance *maniladriverv
 
 	// Define a new Credential Request object
 	creq := generateCredentialsRequest()
+
+	if err := annotator.SetLastAppliedAnnotation(creq); err != nil {
+		return err
+	}
 
 	// Check if this Credential Request already exists
 	found := &credsv1.CredentialsRequest{}
@@ -37,14 +40,12 @@ func (r *ReconcileManilaDriver) handleCredentialsRequest(instance *maniladriverv
 	}
 
 	// Check if we need to update the object
-	creq.Status = found.Status
-	found.TypeMeta = creq.TypeMeta
-	patchResult, err := patch.DefaultPatchMaker.Calculate(found, creq)
+	equal, err := compareLastAppliedAnnotations(found, creq)
 	if err != nil {
 		return err
 	}
 
-	if !patchResult.IsEmpty() {
+	if !equal {
 		reqLogger.Info("Updating CredentialsRequest with new changes", "CredentialsRequest.Namespace", found.Namespace, "CredentialsRequest.Name", found.Name)
 		err = r.client.Update(context.TODO(), creq)
 		if err != nil {

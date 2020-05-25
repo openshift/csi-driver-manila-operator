@@ -3,7 +3,6 @@ package maniladriver
 import (
 	"context"
 
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
 	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
@@ -51,6 +50,10 @@ func (r *ReconcileManilaDriver) handleManilaStorageClass(instance *maniladriverv
 		},
 	}
 
+	if err := annotator.SetLastAppliedAnnotation(sc); err != nil {
+		return err
+	}
+
 	// Check if this StorageClass already exists
 	found := &storagev1.StorageClass{}
 	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: sc.Name, Namespace: ""}, found)
@@ -60,12 +63,12 @@ func (r *ReconcileManilaDriver) handleManilaStorageClass(instance *maniladriverv
 
 	if err == nil {
 		// Check if we need to update the object
-		patchResult, err := patch.DefaultPatchMaker.Calculate(found, sc)
+		equal, err := compareLastAppliedAnnotations(found, sc)
 		if err != nil {
 			return err
 		}
 
-		if !patchResult.IsEmpty() {
+		if !equal {
 			// StorageClass can't be updated directly, so we have to delete it and create again
 			reqLogger.Info("Deleting StorageClass", "StorageClass.Name", found.Name)
 			err = r.client.Delete(context.TODO(), found)

@@ -3,7 +3,6 @@ package maniladriver
 import (
 	"context"
 
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
@@ -27,16 +26,20 @@ func (r *ReconcileManilaDriver) createDriverCredentialsSecret(instance *maniladr
 
 	secret := generateSecret(cloudConfig)
 
+	if err := annotator.SetLastAppliedAnnotation(secret); err != nil {
+		return err
+	}
+
 	found := &corev1.Secret{}
 	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: driverSecretName, Namespace: secretNamespace}, found)
 	if err == nil {
 		// Check if we need to update the object
-		patchResult, err := patch.DefaultPatchMaker.Calculate(found, secret)
+		equal, err := compareLastAppliedAnnotations(found, secret)
 		if err != nil {
 			return err
 		}
 
-		if !patchResult.IsEmpty() {
+		if !equal {
 			reqLogger.Info("Updating Secret with new changes", "Secret.Namespace", found.Namespace, "Secret.Name", found.Name)
 			err = r.client.Update(context.TODO(), secret)
 			if err != nil {

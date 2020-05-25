@@ -3,7 +3,6 @@ package maniladriver
 import (
 	"context"
 
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	storagev1beta1 "k8s.io/api/storage/v1beta1"
@@ -32,6 +31,10 @@ func (r *ReconcileManilaDriver) handleManilaCSIDriver(instance *maniladriverv1al
 		},
 	}
 
+	if err := annotator.SetLastAppliedAnnotation(driver); err != nil {
+		return err
+	}
+
 	// Check if this CSIDriver already exists
 	found := &storagev1beta1.CSIDriver{}
 	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: driver.Name, Namespace: ""}, found)
@@ -49,12 +52,12 @@ func (r *ReconcileManilaDriver) handleManilaCSIDriver(instance *maniladriverv1al
 	}
 
 	// Check if we need to update the object
-	patchResult, err := patch.DefaultPatchMaker.Calculate(found, driver)
+	equal, err := compareLastAppliedAnnotations(found, driver)
 	if err != nil {
 		return err
 	}
 
-	if !patchResult.IsEmpty() {
+	if !equal {
 		reqLogger.Info("Updating CSIDriver with new changes", "CSIDriver.Namespace", found.Namespace, "CSIDriver.Name", found.Name)
 		err = r.client.Update(context.TODO(), driver)
 		if err != nil {
