@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
     - name: hello-manila
-      image: gcr.io/hello-minikube-zero-install/hello-node
+      image: docker.io/library/nginx
       ports:
         - containerPort: 8080
       volumeMounts:
