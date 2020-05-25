@@ -22,14 +22,12 @@ func (r *ReconcileManilaDriver) handleCredentialsRequest(instance *maniladriverv
 
 	// Check if this Credential Request already exists
 	found := &credsv1.CredentialsRequest{}
-	// TODO(mfedosin): figure out why we always get NotFound here
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: creq.Name, Namespace: creq.Namespace}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: creq.Name, Namespace: creq.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new CredentialsRequest", "CredentialsRequest.Namespace", creq.Namespace, "CredentialsRequest.Name", creq.Name)
 		err = r.client.Create(context.TODO(), creq)
 		if err != nil {
-			// // TODO(mfedosin): Uncomment this return when cloud credentials fetching is fixed
-			// return err
+			return err
 		}
 
 		// Credential Request created successfully - don't requeue
@@ -39,6 +37,8 @@ func (r *ReconcileManilaDriver) handleCredentialsRequest(instance *maniladriverv
 	}
 
 	// Check if we need to update the object
+	creq.Status = found.Status
+	found.TypeMeta = creq.TypeMeta
 	patchResult, err := patch.DefaultPatchMaker.Calculate(found, creq)
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func generateCredentialsRequest() *credsv1.CredentialsRequest {
 		Spec: credsv1.CredentialsRequestSpec{
 			SecretRef: corev1.ObjectReference{
 				Name:      "installer-cloud-credentials",
-				Namespace: "manila-csi",
+				Namespace: "openshift-manila-csi-driver",
 			},
 			ProviderSpec: &runtime.RawExtension{
 				Object: openstackProvSpec,

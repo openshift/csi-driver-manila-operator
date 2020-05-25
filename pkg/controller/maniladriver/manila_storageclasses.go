@@ -43,17 +43,17 @@ func (r *ReconcileManilaDriver) handleManilaStorageClass(instance *maniladriverv
 		Parameters: map[string]string{
 			"type": shareType.Name,
 			"csi.storage.k8s.io/provisioner-secret-name":       "csi-manila-secrets",
-			"csi.storage.k8s.io/provisioner-secret-namespace":  "manila-csi",
+			"csi.storage.k8s.io/provisioner-secret-namespace":  "openshift-manila-csi-driver",
 			"csi.storage.k8s.io/node-stage-secret-name":        "csi-manila-secrets",
-			"csi.storage.k8s.io/node-stage-secret-namespace":   "manila-csi",
+			"csi.storage.k8s.io/node-stage-secret-namespace":   "openshift-manila-csi-driver",
 			"csi.storage.k8s.io/node-publish-secret-name":      "csi-manila-secrets",
-			"csi.storage.k8s.io/node-publish-secret-namespace": "manila-csi",
+			"csi.storage.k8s.io/node-publish-secret-namespace": "openshift-manila-csi-driver",
 		},
 	}
 
 	// Check if this StorageClass already exists
 	found := &storagev1.StorageClass{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: sc.Name, Namespace: ""}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: sc.Name, Namespace: ""}, found)
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}

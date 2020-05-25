@@ -17,7 +17,7 @@ const (
 	cloudsSecretKey     = "clouds.yaml"
 	installerSecretName = "installer-cloud-credentials"
 	driverSecretName    = "csi-manila-secrets"
-	secretNamespace     = "manila-csi"
+	secretNamespace     = "openshift-manila-csi-driver"
 	cloudName           = "openstack"
 )
 
@@ -28,7 +28,7 @@ func (r *ReconcileManilaDriver) createDriverCredentialsSecret(instance *maniladr
 	secret := generateSecret(cloudConfig)
 
 	found := &corev1.Secret{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: driverSecretName, Namespace: secretNamespace}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: driverSecretName, Namespace: secretNamespace}, found)
 	if err == nil {
 		// Check if we need to update the object
 		patchResult, err := patch.DefaultPatchMaker.Calculate(found, secret)

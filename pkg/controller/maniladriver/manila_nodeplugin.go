@@ -21,7 +21,7 @@ func (r *ReconcileManilaDriver) handleManilaNodePluginDaemonSet(instance *manila
 
 	// Check if this DaemonSet already exists
 	found := &appsv1.DaemonSet{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: ds.Name, Namespace: ds.Namespace}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: ds.Name, Namespace: ds.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new DaemonSet", "DaemonSet.Namespace", ds.Namespace, "DaemonSet.Name", ds.Name)
 		err = r.client.Create(context.TODO(), ds)
@@ -69,7 +69,7 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "openstack-manila-csi-nodeplugin",
-			Namespace: "manila-csi",
+			Namespace: "openshift-manila-csi-driver",
 			Labels:    labelsManilaNodePlugin,
 		},
 		Spec: appsv1.DaemonSetSpec{

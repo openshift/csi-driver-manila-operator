@@ -34,7 +34,7 @@ func (r *ReconcileManilaDriver) handleManilaCSIDriver(instance *maniladriverv1al
 
 	// Check if this CSIDriver already exists
 	found := &storagev1beta1.CSIDriver{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: driver.Name, Namespace: ""}, found)
+	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: driver.Name, Namespace: ""}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new CSIDriver", "CSIDriver.Name", driver.Name)
 		err = r.client.Create(context.TODO(), driver)

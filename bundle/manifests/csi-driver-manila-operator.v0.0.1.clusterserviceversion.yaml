@@ -2,10 +2,10 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   name: csi-driver-manila-operator.v0.0.1
-  namespace: manila-csi
+  namespace: openshift-manila-csi-driver-operator
   annotations:
     alm-examples: >-
-      [{"apiVersion":"csi.openshift.io/v1alpha1","kind":"ManilaDriver","metadata":{"name":"example-manilacsi","namespace":"manila-csi"}},{"apiVersion":"csi.openshift.io/v1alpha1","kind":"ManilaDriver","metadata":{"name":"example-manilacsi","namespace":"manila-csi"}}]
+      [{"apiVersion":"csi.openshift.io/v1alpha1","kind":"ManilaDriver","metadata":{"name":"example-manilacsi","namespace":"openshift-manila-csi-driver-operator"}},{"apiVersion":"csi.openshift.io/v1alpha1","kind":"ManilaDriver","metadata":{"name":"example-manilacsi","namespace":"openshift-manila-csi-driver-operator"}}]
     categories: Storage
     certified: 'false'
     createdAt: 'Tue Mar 17 17:27:30 CET 2020'
@@ -168,6 +168,40 @@ spec:
       clusterPermissions:
         - rules:
             - apiGroups:
+                - ''
+              resources:
+                - pods
+                - services
+                - services/finalizers
+                - endpoints
+                - persistentvolumeclaims
+                - events
+                - configmaps
+                - secrets
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - apps
+              resources:
+                - deployments
+                - daemonsets
+                - replicasets
+                - statefulsets
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
                 - storage.k8s.io
               resources:
                 - csidrivers
@@ -254,6 +288,9 @@ spec:
               verbs:
                 - get
                 - list
+                - create
+                - delete
+                - watch
             - apiGroups:
                 - ''
               resources:
