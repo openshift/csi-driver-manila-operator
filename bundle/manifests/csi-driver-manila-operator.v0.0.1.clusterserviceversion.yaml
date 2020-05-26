@@ -152,18 +152,6 @@ spec:
                 - deployments
               verbs:
                 - get
-            - apiGroups:
-                - csi.openshift.io
-              resources:
-                - '*'
-              verbs:
-                - create
-                - delete
-                - get
-                - list
-                - patch
-                - update
-                - watch
           serviceAccountName: csi-driver-manila-operator
       clusterPermissions:
         - rules:
@@ -406,6 +394,18 @@ spec:
                 - delete
                 - get
                 - update
+            - apiGroups:
+                - csi.openshift.io
+              resources:
+                - '*'
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
           serviceAccountName: csi-driver-manila-operator
       deployments:
         - name: csi-driver-manila-operator

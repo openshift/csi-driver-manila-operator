@@ -67,18 +67,6 @@ rules:
   - deployments
   verbs:
   - get
-- apiGroups:
-  - csi.openshift.io
-  resources:
-  - '*'
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
 
 ---
 kind: ClusterRole
@@ -325,3 +313,15 @@ rules:
   - delete
   - get
   - update
+- apiGroups:
+  - csi.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
