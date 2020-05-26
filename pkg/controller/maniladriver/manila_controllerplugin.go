@@ -3,7 +3,6 @@ package maniladriver
 import (
 	"context"
 
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -18,6 +17,10 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginStatefulSet(instance
 
 	// Define a new StatefulSet object
 	ss := generateManilaControllerPluginStatefulSet()
+
+	if err := annotator.SetLastAppliedAnnotation(ss); err != nil {
+		return err
+	}
 
 	// Check if this StatefulSet already exists
 	found := &appsv1.StatefulSet{}
@@ -36,14 +39,13 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginStatefulSet(instance
 	}
 
 	// Check if we need to update the object
-	ss.Status = found.Status
-	patchResult, err := patch.DefaultPatchMaker.Calculate(found, ss)
+	equal, err := compareLastAppliedAnnotations(found, ss)
 	if err != nil {
 		return err
 	}
 
-	if !patchResult.IsEmpty() {
-		reqLogger.Info("Updating StatefulSet with new changes", "StatefulSet.Namespace", found.Namespace, "StatefulSet.Name", found.Name, "Changes", patchResult.String())
+	if !equal {
+		reqLogger.Info("Updating StatefulSet with new changes", "StatefulSet.Namespace", found.Namespace, "StatefulSet.Name", found.Name)
 		err = r.client.Update(context.TODO(), ss)
 		if err != nil {
 			return err

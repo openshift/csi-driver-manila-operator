@@ -394,6 +394,7 @@ spec:
                 - watch
                 - delete
                 - get
+                - update
             - apiGroups:
                 - security.openshift.io
               resources:

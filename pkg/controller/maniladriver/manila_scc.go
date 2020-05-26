@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	securityv1 "github.com/openshift/api/security/v1"
 	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
@@ -61,6 +60,10 @@ func (r *ReconcileManilaDriver) handleSecurityContextConstraints(instance *manil
 		return err
 	}
 
+	if err := annotator.SetLastAppliedAnnotation(scc); err != nil {
+		return err
+	}
+
 	// Check if this Security Context Constraints already exists
 	found := &securityv1.SecurityContextConstraints{}
 	err = r.apiReader.Get(context.TODO(), types.NamespacedName{Name: scc.Name, Namespace: ""}, found)
@@ -79,15 +82,12 @@ func (r *ReconcileManilaDriver) handleSecurityContextConstraints(instance *manil
 
 	// Check if we need to update the object
 	found.TypeMeta = scc.TypeMeta
-	patchResult, err := patch.DefaultPatchMaker.Calculate(found, scc)
+	equal, err := compareLastAppliedAnnotations(found, scc)
 	if err != nil {
 		return err
 	}
 
-	if !patchResult.IsEmpty() {
-		// Workaround for https://github.com/kubernetes/kubernetes/issues/70674
-		scc.ObjectMeta.ResourceVersion = found.ObjectMeta.ResourceVersion
-
+	if !equal {
 		reqLogger.Info("Updating SecurityContextConstraints with new changes", "SecurityContextConstraints.Name", found.Name)
 		err = r.client.Update(context.TODO(), scc)
 		if err != nil {

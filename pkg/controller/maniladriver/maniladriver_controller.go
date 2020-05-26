@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	"github.com/nsf/jsondiff"
 	securityv1 "github.com/openshift/api/security/v1"
 	credsv1 "github.com/openshift/cloud-credential-operator/pkg/apis/cloudcredential/v1"
 	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
@@ -30,7 +32,30 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+const (
+	lastAppliedAnnotationName = "manila.csi.openshift.io/last-applied"
+)
+
 var log = logf.Log.WithName("controller_maniladriver")
+
+var annotator = patch.NewAnnotator("manila.csi.openshift.io/last-applied")
+
+func compareLastAppliedAnnotations(currentObject, modifiedObject runtime.Object) (bool, error) {
+	currentAnnotation, err := annotator.GetOriginalConfiguration(currentObject)
+	if err != nil {
+		return false, err
+	}
+
+	modifiedAnnotation, err := annotator.GetOriginalConfiguration(modifiedObject)
+	if err != nil {
+		return false, err
+	}
+
+	opts := jsondiff.DefaultJSONOptions()
+	diff, _ := jsondiff.Compare(currentAnnotation, modifiedAnnotation, &opts)
+
+	return diff == jsondiff.FullMatch, nil
+}
 
 // Add creates a new ManilaDriver Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.

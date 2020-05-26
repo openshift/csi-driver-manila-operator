@@ -3,7 +3,6 @@ package maniladriver
 import (
 	"context"
 
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -56,6 +55,10 @@ func (r *ReconcileManilaDriver) handleNFSNodePluginServiceAccount(instance *mani
 		},
 	}
 
+	if err := annotator.SetLastAppliedAnnotation(sa); err != nil {
+		return err
+	}
+
 	// Check if this ServiceAccount already exists
 	found := &corev1.ServiceAccount{}
 	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: sa.Name, Namespace: sa.Namespace}, found)
@@ -73,12 +76,12 @@ func (r *ReconcileManilaDriver) handleNFSNodePluginServiceAccount(instance *mani
 	}
 
 	// Check if we need to update the object
-	patchResult, err := patch.DefaultPatchMaker.Calculate(found, sa)
+	equal, err := compareLastAppliedAnnotations(found, sa)
 	if err != nil {
 		return err
 	}
 
-	if !patchResult.IsEmpty() {
+	if !equal {
 		reqLogger.Info("Updating ServiceAccount with new changes", "ServiceAccount.Namespace", found.Namespace, "ServiceAccount.Name", found.Name)
 		err = r.client.Update(context.TODO(), sa)
 		if err != nil {
@@ -120,6 +123,10 @@ func (r *ReconcileManilaDriver) handleNFSNodePluginClusterRole(instance *manilad
 		},
 	}
 
+	if err := annotator.SetLastAppliedAnnotation(cr); err != nil {
+		return err
+	}
+
 	// Check if this ClusterRole already exists
 	found := &rbacv1.ClusterRole{}
 	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: cr.Name, Namespace: ""}, found)
@@ -137,12 +144,12 @@ func (r *ReconcileManilaDriver) handleNFSNodePluginClusterRole(instance *manilad
 	}
 
 	// Check if we need to update the object
-	patchResult, err := patch.DefaultPatchMaker.Calculate(found, cr)
+	equal, err := compareLastAppliedAnnotations(found, cr)
 	if err != nil {
 		return err
 	}
 
-	if !patchResult.IsEmpty() {
+	if !equal {
 		reqLogger.Info("Updating ClusterRole with new changes", "ClusterRole.Name", found.Name)
 		err = r.client.Update(context.TODO(), cr)
 		if err != nil {
@@ -179,6 +186,10 @@ func (r *ReconcileManilaDriver) handleNFSNodePluginClusterRoleBinding(instance *
 		},
 	}
 
+	if err := annotator.SetLastAppliedAnnotation(crb); err != nil {
+		return err
+	}
+
 	// Check if this ClusterRoleBinding already exists
 	found := &rbacv1.ClusterRoleBinding{}
 	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: crb.Name, Namespace: ""}, found)
@@ -196,12 +207,12 @@ func (r *ReconcileManilaDriver) handleNFSNodePluginClusterRoleBinding(instance *
 	}
 
 	// Check if we need to update the object
-	patchResult, err := patch.DefaultPatchMaker.Calculate(found, crb)
+	equal, err := compareLastAppliedAnnotations(found, crb)
 	if err != nil {
 		return err
 	}
 
-	if !patchResult.IsEmpty() {
+	if !equal {
 		reqLogger.Info("Updating ClusterRoleBinding with new changes", "ClusterRoleBinding.Name", found.Name)
 		err = r.client.Update(context.TODO(), crb)
 		if err != nil {

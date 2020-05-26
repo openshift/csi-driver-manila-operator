@@ -3,7 +3,6 @@ package maniladriver
 import (
 	"context"
 
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -42,6 +41,10 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginService(instance *ma
 		},
 	}
 
+	if err := annotator.SetLastAppliedAnnotation(srv); err != nil {
+		return err
+	}
+
 	// Check if this Service already exists
 	found := &corev1.Service{}
 	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: srv.Name, Namespace: srv.Namespace}, found)
@@ -59,16 +62,18 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginService(instance *ma
 	}
 
 	// Check if we need to update the object
-	patchResult, err := patch.DefaultPatchMaker.Calculate(found, srv)
+	equal, err := compareLastAppliedAnnotations(found, srv)
 	if err != nil {
 		return err
 	}
 
-	if !patchResult.IsEmpty() {
-		// Workaround for https://github.com/kubernetes/kubernetes/issues/70674
-		srv.ObjectMeta.ResourceVersion = found.ObjectMeta.ResourceVersion
-
+	if !equal {
 		reqLogger.Info("Updating Service with new changes", "Service.Namespace", found.Namespace, "Service.Name", found.Name)
+
+		if err := annotator.SetLastAppliedAnnotation(srv); err != nil {
+			return err
+		}
+
 		err = r.client.Update(context.TODO(), srv)
 		if err != nil {
 			return err

@@ -3,7 +3,6 @@ package maniladriver
 import (
 	"context"
 
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
 	maniladriverv1alpha1 "github.com/openshift/csi-driver-manila-operator/pkg/apis/maniladriver/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -18,6 +17,10 @@ func (r *ReconcileManilaDriver) handleManilaNodePluginDaemonSet(instance *manila
 
 	// Define a new DaemonSet object
 	ds := generateManilaNodePluginManifest()
+
+	if err := annotator.SetLastAppliedAnnotation(ds); err != nil {
+		return err
+	}
 
 	// Check if this DaemonSet already exists
 	found := &appsv1.DaemonSet{}
@@ -36,14 +39,13 @@ func (r *ReconcileManilaDriver) handleManilaNodePluginDaemonSet(instance *manila
 	}
 
 	// Check if we need to update the object
-	ds.Status = found.Status
-	patchResult, err := patch.DefaultPatchMaker.Calculate(found, ds)
+	equal, err := compareLastAppliedAnnotations(found, ds)
 	if err != nil {
 		return err
 	}
 
-	if !patchResult.IsEmpty() {
-		reqLogger.Info("Updating DaemonSet with new changes", "DaemonSet.Namespace", found.Namespace, "DaemonSet.Name", found.Name, "Changes", patchResult.String())
+	if !equal {
+		reqLogger.Info("Updating DaemonSet with new changes", "DaemonSet.Namespace", found.Namespace, "DaemonSet.Name", found.Name)
 		err = r.client.Update(context.TODO(), ds)
 		if err != nil {
 			return err
