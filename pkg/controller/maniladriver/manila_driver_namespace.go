@@ -14,11 +14,7 @@ import (
 func (r *ReconcileManilaDriver) handleManilaDriverNamespace(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Driver Namespace")
 
-	ns := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "openshift-manila-csi-driver",
-		},
-	}
+	ns := generateManilaNamespace()
 
 	// Check if this Namespace already exists
 	found := &corev1.Namespace{}
@@ -39,4 +35,25 @@ func (r *ReconcileManilaDriver) handleManilaDriverNamespace(instance *maniladriv
 	// Namespace already exists - don't requeue
 	reqLogger.Info("Skip reconcile: Namespace already exists", "Namespace.Name", found.Name)
 	return nil
+}
+
+func (r *ReconcileManilaDriver) deleteManilaDriverNamespace(reqLogger logr.Logger) error {
+	reqLogger.Info("Deleting Manila Driver Namespace")
+
+	err := r.client.Delete(context.TODO(), generateManilaNamespace())
+	if err != nil {
+		return err
+	}
+
+	reqLogger.Info("Manila Driver Namespace was deleted succesfully")
+
+	return nil
+}
+
+func generateManilaNamespace() *corev1.Namespace {
+	return &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "openshift-manila-csi-driver",
+		},
+	}
 }

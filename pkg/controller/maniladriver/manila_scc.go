@@ -101,6 +101,24 @@ func (r *ReconcileManilaDriver) handleSecurityContextConstraints(instance *manil
 	return nil
 }
 
+func (r *ReconcileManilaDriver) deleteSecurityContextConstraints(reqLogger logr.Logger) error {
+	reqLogger.Info("Deleting Security Context Constraints")
+
+	scc, err := generateSecurityContextConstraints()
+	if err != nil {
+		return err
+	}
+
+	err = r.client.Delete(context.TODO(), scc)
+	if err != nil {
+		return err
+	}
+
+	reqLogger.Info("Security Context Constraints were deleted succesfully", "SecurityContextConstraints.Name", scc.Name)
+
+	return nil
+}
+
 func generateSecurityContextConstraints() (*securityv1.SecurityContextConstraints, error) {
 	scc := &securityv1.SecurityContextConstraints{}
 

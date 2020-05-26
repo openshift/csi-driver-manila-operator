@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -34,6 +35,8 @@ import (
 
 const (
 	lastAppliedAnnotationName = "manila.csi.openshift.io/last-applied"
+
+	manilaDriverFinalizer = "finalizer.manila.csi.openshift.io"
 )
 
 var log = logf.Log.WithName("controller_maniladriver")
@@ -148,6 +151,36 @@ func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.
 		// Error reading the object - requeue the request.
 		reqLogger.Error(err, "Failed to get %v: %v", request.NamespacedName, err)
 		return reconcile.Result{}, err
+	}
+
+	// Check if the ManilaDriver instance is marked to be deleted, which is
+	// indicated by the deletion timestamp being set.
+	isManilaDriverMarkedToBeDeleted := instance.GetDeletionTimestamp() != nil
+	if isManilaDriverMarkedToBeDeleted {
+		if contains(instance.GetFinalizers(), manilaDriverFinalizer) {
+			// Run finalization logic for manilaDriverFinalizer. If the
+			// finalization logic fails, don't remove the finalizer so
+			// that we can retry during the next reconciliation.
+			if err := r.finalizeManilaDriver(reqLogger, instance); err != nil {
+				return reconcile.Result{}, err
+			}
+
+			// Remove manilaDriverFinalizer. Once all finalizers have been
+			// removed, the object will be deleted.
+			controllerutil.RemoveFinalizer(instance, manilaDriverFinalizer)
+			err := r.client.Update(context.TODO(), instance)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+		return reconcile.Result{}, nil
+	}
+
+	// Add finalizer for this CR
+	if !contains(instance.GetFinalizers(), manilaDriverFinalizer) {
+		if err := r.addFinalizer(reqLogger, instance); err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	// Manila Driver Namespace
@@ -328,4 +361,96 @@ func (r *ReconcileManilaDriver) getCloudFromSecret() (clientconfig.Cloud, error)
 	}
 
 	return clouds.Clouds[cloudName], nil
+}
+
+func (r *ReconcileManilaDriver) finalizeManilaDriver(reqLogger logr.Logger, instance *maniladriverv1alpha1.ManilaDriver) error {
+	// Here we sequentially delete all cluster-scoped Manila resources.
+	// All NotFound errors are ignored to make the delition idempotent.
+
+	// Delete Manila Driver Namespace
+	err := r.deleteManilaDriverNamespace(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete Storage Classes
+	err = r.deleteManilaStorageClasses(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete Credentials Request
+	err = r.deleteCredentialsRequest(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete SecurityContextConstraints
+	err = r.deleteSecurityContextConstraints(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete CSI driver
+	err = r.deleteCSIDriver(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete Cluster Roles
+	err = r.deleteManilaControllerPluginClusterRole(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	err = r.deleteManilaNodePluginClusterRole(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	err = r.deleteNFSNodePluginClusterRole(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete Cluster Role Bindings
+	err = r.deleteManilaControllerPluginClusterRoleBinding(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	err = r.deleteManilaNodePluginClusterRoleBinding(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	err = r.deleteNFSNodePluginClusterRoleBinding(reqLogger)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	reqLogger.Info("Successfully finalized ManilaDriver")
+	return nil
+}
+
+func (r *ReconcileManilaDriver) addFinalizer(reqLogger logr.Logger, instance *maniladriverv1alpha1.ManilaDriver) error {
+	reqLogger.Info("Adding Finalizer for the ManilaDriver")
+	controllerutil.AddFinalizer(instance, manilaDriverFinalizer)
+
+	// Update CR
+	err := r.client.Update(context.TODO(), instance)
+	if err != nil {
+		reqLogger.Error(err, "Failed to update ManilaDriver with finalizer")
+		return err
+	}
+	return nil
+}
+
+func contains(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }

@@ -21,15 +21,7 @@ func (r *ReconcileManilaDriver) handleManilaCSIDriver(instance *maniladriverv1al
 	reqLogger.Info("Reconciling Manila CSIDriver")
 
 	// Define a new CSIDriver object
-	driver := &storagev1beta1.CSIDriver{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "manila.csi.openstack.org",
-		},
-		Spec: storagev1beta1.CSIDriverSpec{
-			AttachRequired: falsePTR(),
-			PodInfoOnMount: falsePTR(),
-		},
-	}
+	driver := generateCSIDriver()
 
 	if err := annotator.SetLastAppliedAnnotation(driver); err != nil {
 		return err
@@ -69,4 +61,31 @@ func (r *ReconcileManilaDriver) handleManilaCSIDriver(instance *maniladriverv1al
 	}
 
 	return nil
+}
+
+func (r *ReconcileManilaDriver) deleteCSIDriver(reqLogger logr.Logger) error {
+	reqLogger.Info("Deleting CSI Driver")
+
+	driver := generateCSIDriver()
+
+	err := r.client.Delete(context.TODO(), driver)
+	if err != nil {
+		return err
+	}
+
+	reqLogger.Info("CSI Driver was deleted succesfully", "CSIDriver.Name", driver.Name)
+
+	return nil
+}
+
+func generateCSIDriver() *storagev1beta1.CSIDriver {
+	return &storagev1beta1.CSIDriver{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "manila.csi.openstack.org",
+		},
+		Spec: storagev1beta1.CSIDriverSpec{
+			AttachRequired: falsePTR(),
+			PodInfoOnMount: falsePTR(),
+		},
+	}
 }
