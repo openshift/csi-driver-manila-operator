@@ -89,7 +89,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch owned objects
 	watchOwnedObjects := []runtime.Object{
-		&appsv1.StatefulSet{},
+		&appsv1.Deployment{},
 		&appsv1.DaemonSet{},
 		&corev1.Namespace{},
 		&corev1.Secret{},
@@ -287,14 +287,8 @@ func (r *ReconcileManilaDriver) handleManilariverDeployment(instance *maniladriv
 		return reconcile.Result{}, err
 	}
 
-	// Manila Controller Plugin Service
-	err = r.handleManilaControllerPluginService(instance, reqLogger)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Manila Controller Plugin StatefulSet
-	err = r.handleManilaControllerPluginStatefulSet(instance, reqLogger)
+	// Manila Controller Plugin Deployment
+	err = r.handleManilaControllerPluginDeployment(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

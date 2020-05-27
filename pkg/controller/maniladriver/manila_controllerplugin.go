@@ -12,27 +12,27 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcileManilaDriver) handleManilaControllerPluginStatefulSet(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
-	reqLogger.Info("Reconciling Manila Controller Plugin StatefulSet")
+func (r *ReconcileManilaDriver) handleManilaControllerPluginDeployment(instance *maniladriverv1alpha1.ManilaDriver, reqLogger logr.Logger) error {
+	reqLogger.Info("Reconciling Manila Controller Plugin Deployment")
 
-	// Define a new StatefulSet object
-	ss := generateManilaControllerPluginStatefulSet()
+	// Define a new Deployment object
+	ss := generateManilaControllerPluginDeployment()
 
 	if err := annotator.SetLastAppliedAnnotation(ss); err != nil {
 		return err
 	}
 
-	// Check if this StatefulSet already exists
-	found := &appsv1.StatefulSet{}
+	// Check if this Deployment already exists
+	found := &appsv1.Deployment{}
 	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: ss.Name, Namespace: ss.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new StatefulSet", "StatefulSet.Namespace", ss.Namespace, "StatefulSet.Name", ss.Name)
+		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", ss.Namespace, "Deployment.Name", ss.Name)
 		err = r.client.Create(context.TODO(), ss)
 		if err != nil {
 			return err
 		}
 
-		// StatefulSet created successfully - don't requeue
+		// Deployment created successfully - don't requeue
 		return nil
 	} else if err != nil {
 		return err
@@ -45,29 +45,29 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginStatefulSet(instance
 	}
 
 	if !equal {
-		reqLogger.Info("Updating StatefulSet with new changes", "StatefulSet.Namespace", found.Namespace, "StatefulSet.Name", found.Name)
+		reqLogger.Info("Updating Deployment with new changes", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
 		err = r.client.Update(context.TODO(), ss)
 		if err != nil {
 			return err
 		}
 	} else {
-		// StatefulSet already exists - don't requeue
-		reqLogger.Info("Skip reconcile: StatefulSet already exists", "StatefulSet.Namespace", found.Namespace, "StatefulSet.Name", found.Name)
+		// Deployment already exists - don't requeue
+		reqLogger.Info("Skip reconcile: Deployment already exists", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
 	}
 
 	return nil
 }
 
-func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
+func generateManilaControllerPluginDeployment() *appsv1.Deployment {
 	trueVar := true
 	replicaNumber := int32(1)
 	mountPropagationBidirectional := corev1.MountPropagationBidirectional
 	hostPathDirectoryOrCreate := corev1.HostPathDirectoryOrCreate
 	hostPathDirectory := corev1.HostPathDirectory
 
-	return &appsv1.StatefulSet{
+	return &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "StatefulSet",
+			Kind:       "Deployment",
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -75,9 +75,8 @@ func generateManilaControllerPluginStatefulSet() *appsv1.StatefulSet {
 			Namespace: "openshift-manila-csi-driver",
 			Labels:    labelsManilaControllerPlugin,
 		},
-		Spec: appsv1.StatefulSetSpec{
-			ServiceName: "openstack-manila-csi-controllerplugin",
-			Replicas:    &replicaNumber,
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicaNumber,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsManilaControllerPlugin,
 			},
