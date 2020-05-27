@@ -99,34 +99,7 @@ func (r *ReconcileManilaDriver) handleManilaNodePluginClusterRole(instance *mani
 	reqLogger.Info("Reconciling Manila Node Plugin Cluster Role")
 
 	// Define a new ClusterRole object
-	cr := &rbacv1.ClusterRole{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "openstack-manila-csi-nodeplugin",
-			Labels: labelsManilaNodePlugin,
-		},
-		Rules: []rbacv1.PolicyRule{
-			{
-				APIGroups: []string{""},
-				Resources: []string{"configmaps"},
-				Verbs:     []string{"get", "list"},
-			},
-			{
-				APIGroups: []string{""},
-				Resources: []string{"nodes"},
-				Verbs:     []string{"get", "list", "update"},
-			},
-			{
-				APIGroups: []string{""},
-				Resources: []string{"namespaces"},
-				Verbs:     []string{"get", "list"},
-			},
-			{
-				APIGroups: []string{""},
-				Resources: []string{"persistentvolumes"},
-				Verbs:     []string{"get", "list", "watch", "update"},
-			},
-		},
-	}
+	cr := generateManilaNodePluginClusterRole()
 
 	if err := annotator.SetLastAppliedAnnotation(cr); err != nil {
 		return err
@@ -172,24 +145,7 @@ func (r *ReconcileManilaDriver) handleManilaNodePluginClusterRoleBinding(instanc
 	reqLogger.Info("Reconciling Manila Node Plugin Cluster Role Binding")
 
 	// Define a new ClusterRoleBinding object
-	crb := &rbacv1.ClusterRoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "openstack-manila-csi-nodeplugin",
-			Labels: labelsManilaNodePlugin,
-		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      "openstack-manila-csi-nodeplugin",
-				Namespace: "openshift-manila-csi-driver",
-			},
-		},
-		RoleRef: rbacv1.RoleRef{
-			Kind:     "ClusterRole",
-			Name:     "openstack-manila-csi-nodeplugin",
-			APIGroup: "rbac.authorization.k8s.io",
-		},
-	}
+	crb := generateManilaNodePluginClusterRoleBinding()
 
 	if err := annotator.SetLastAppliedAnnotation(crb); err != nil {
 		return err
@@ -229,4 +185,82 @@ func (r *ReconcileManilaDriver) handleManilaNodePluginClusterRoleBinding(instanc
 	}
 
 	return nil
+}
+
+func (r *ReconcileManilaDriver) deleteManilaNodePluginClusterRole(reqLogger logr.Logger) error {
+	cr := generateManilaNodePluginClusterRole()
+
+	err := r.client.Delete(context.TODO(), cr)
+	if err != nil {
+		return err
+	}
+
+	reqLogger.Info("Cluster Role was deleted succesfully", "ClusterRole.Name", cr.Name)
+
+	return nil
+}
+
+func (r *ReconcileManilaDriver) deleteManilaNodePluginClusterRoleBinding(reqLogger logr.Logger) error {
+	crb := generateManilaNodePluginClusterRoleBinding()
+
+	err := r.client.Delete(context.TODO(), crb)
+	if err != nil {
+		return err
+	}
+
+	reqLogger.Info("Cluster Role Binding was deleted succesfully", "ClusterRoleBinding.Name", crb.Name)
+
+	return nil
+}
+
+func generateManilaNodePluginClusterRole() *rbacv1.ClusterRole {
+	return &rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "openstack-manila-csi-nodeplugin",
+			Labels: labelsManilaNodePlugin,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{""},
+				Resources: []string{"configmaps"},
+				Verbs:     []string{"get", "list"},
+			},
+			{
+				APIGroups: []string{""},
+				Resources: []string{"nodes"},
+				Verbs:     []string{"get", "list", "update"},
+			},
+			{
+				APIGroups: []string{""},
+				Resources: []string{"namespaces"},
+				Verbs:     []string{"get", "list"},
+			},
+			{
+				APIGroups: []string{""},
+				Resources: []string{"persistentvolumes"},
+				Verbs:     []string{"get", "list", "watch", "update"},
+			},
+		},
+	}
+}
+
+func generateManilaNodePluginClusterRoleBinding() *rbacv1.ClusterRoleBinding {
+	return &rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "openstack-manila-csi-nodeplugin",
+			Labels: labelsManilaNodePlugin,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      "openstack-manila-csi-nodeplugin",
+				Namespace: "openshift-manila-csi-driver",
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			Kind:     "ClusterRole",
+			Name:     "openstack-manila-csi-nodeplugin",
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+	}
 }

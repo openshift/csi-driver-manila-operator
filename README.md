@@ -15,7 +15,7 @@ TBD
 The operator needs its own namespace, service account, security context, and a few roles and bindings. For example, to install these on OpenShift >= 4.4:
 
 ```sh
-oc apply -f deploy/namespace.yaml -f deploy/crds/csi.openshift.io_maniladrivers_crd.yaml -f deploy/service_account.yaml -f deploy/role_binding.yaml -f deploy/role.yaml -f deploy/crds/csi.openshift.io_v1alpha1_maniladriver_cr.yaml -f deploy/operator.yaml
+oc apply -f deploy/namespace.yaml -f deploy/crds/csi.openshift.io_maniladrivers_crd.yaml -f deploy/service_account.yaml -f deploy/role_binding.yaml -f deploy/role.yaml -f deploy/operator.yaml -f deploy/crds/csi.openshift.io_v1alpha1_maniladriver_cr.yaml
 ```
 
 For Kubernetes you will also need to define user credentials to access Manila and put them in a secret. An example manifest can be found in `examples/nfs/secrets.yaml`. The result should look like:
@@ -107,6 +107,14 @@ TBD
 
 #### Removing the operator manually
 
+First, delete the CR. The driver and its cluster-scoped resources will be removed along with it.
+
 ```sh
-oc delete -f deploy/operator.yaml -f deploy/crds/csi.openshift.io_v1alpha1_maniladriver_cr.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/service_account.yaml -f deploy/crds/csi.openshift.io_maniladrivers_crd.yaml -f deploy/namespace.yaml
+oc delete -f deploy/crds/csi.openshift.io_v1alpha1_maniladriver_cr.yaml
+```
+
+When the driver is deleted, remove the ramaining parts of the operator.
+
+```sh
+oc delete -f deploy/crds/csi.openshift.io_maniladrivers_crd.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/service_account.yaml -f deploy/namespace.yaml
 ```

@@ -111,74 +111,7 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginClusterRole(instance
 	reqLogger.Info("Reconciling Manila Controller Plugin Cluster Role")
 
 	// Define a new ClusterRole object
-	cr := &rbacv1.ClusterRole{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "openstack-manila-csi-controllerplugin",
-			Labels: labelsManilaControllerPlugin,
-		},
-		Rules: []rbacv1.PolicyRule{
-			{
-				APIGroups: []string{""},
-				Resources: []string{"nodes"},
-				Verbs:     []string{"get", "list", "watch"},
-			},
-			{
-				APIGroups: []string{""},
-				Resources: []string{"secrets"},
-				Verbs:     []string{"get", "list"},
-			},
-			{
-				APIGroups: []string{""},
-				Resources: []string{"persistentvolumes"},
-				Verbs:     []string{"get", "list", "watch", "create", "delete"},
-			},
-			{
-				APIGroups: []string{""},
-				Resources: []string{"persistentvolumeclaims"},
-				Verbs:     []string{"get", "list", "watch", "update"},
-			},
-			{
-				APIGroups: []string{""},
-				Resources: []string{"events"},
-				Verbs:     []string{"list", "watch", "create", "update", "patch"},
-			},
-			{
-				APIGroups: []string{"storage.k8s.io"},
-				Resources: []string{"storageclasses"},
-				Verbs:     []string{"get", "list", "watch"},
-			},
-			{
-				APIGroups: []string{"storage.k8s.io"},
-				Resources: []string{"csinodes"},
-				Verbs:     []string{"get", "list", "watch"},
-			},
-			{
-				APIGroups: []string{"snapshot.storage.k8s.io"},
-				Resources: []string{"volumesnapshotclasses"},
-				Verbs:     []string{"get", "list", "watch"},
-			},
-			{
-				APIGroups: []string{"snapshot.storage.k8s.io"},
-				Resources: []string{"volumesnapshotcontents"},
-				Verbs:     []string{"create", "get", "list", "watch", "update", "delete"},
-			},
-			{
-				APIGroups: []string{"snapshot.storage.k8s.io"},
-				Resources: []string{"volumesnapshots"},
-				Verbs:     []string{"get", "list", "watch", "update"},
-			},
-			{
-				APIGroups: []string{"snapshot.storage.k8s.io"},
-				Resources: []string{"volumesnapshots/status"},
-				Verbs:     []string{"update"},
-			},
-			{
-				APIGroups: []string{"apiextensions.k8s.io"},
-				Resources: []string{"customresourcedefinitions"},
-				Verbs:     []string{"create", "list", "watch", "delete", "get", "update"},
-			},
-		},
-	}
+	cr := generateManilaControllerPluginClusterRole()
 
 	if err := annotator.SetLastAppliedAnnotation(cr); err != nil {
 		return err
@@ -224,24 +157,7 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginClusterRoleBinding(i
 	reqLogger.Info("Reconciling Manila Controller Plugin Cluster Role Binding")
 
 	// Define a new ClusterRoleBinding object
-	crb := &rbacv1.ClusterRoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "openstack-manila-csi-controllerplugin",
-			Labels: labelsManilaControllerPlugin,
-		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      "openstack-manila-csi-controllerplugin",
-				Namespace: "openshift-manila-csi-driver",
-			},
-		},
-		RoleRef: rbacv1.RoleRef{
-			Kind:     "ClusterRole",
-			Name:     "openstack-manila-csi-controllerplugin",
-			APIGroup: "rbac.authorization.k8s.io",
-		},
-	}
+	crb := generateManilaControllerPluginClusterRoleBinding()
 
 	if err := annotator.SetLastAppliedAnnotation(crb); err != nil {
 		return err
@@ -409,4 +325,122 @@ func (r *ReconcileManilaDriver) handleManilaControllerPluginRoleBinding(instance
 	}
 
 	return nil
+}
+
+func (r *ReconcileManilaDriver) deleteManilaControllerPluginClusterRole(reqLogger logr.Logger) error {
+	cr := generateManilaControllerPluginClusterRole()
+
+	err := r.client.Delete(context.TODO(), cr)
+	if err != nil {
+		return err
+	}
+
+	reqLogger.Info("Cluster Role was deleted succesfully", "ClusterRole.Name", cr.Name)
+
+	return nil
+}
+
+func (r *ReconcileManilaDriver) deleteManilaControllerPluginClusterRoleBinding(reqLogger logr.Logger) error {
+	crb := generateManilaControllerPluginClusterRoleBinding()
+
+	err := r.client.Delete(context.TODO(), crb)
+	if err != nil {
+		return err
+	}
+
+	reqLogger.Info("Cluster Role Binding was deleted succesfully", "ClusterRoleBinding.Name", crb.Name)
+
+	return nil
+}
+
+func generateManilaControllerPluginClusterRole() *rbacv1.ClusterRole {
+	return &rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "openstack-manila-csi-controllerplugin",
+			Labels: labelsManilaControllerPlugin,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{""},
+				Resources: []string{"nodes"},
+				Verbs:     []string{"get", "list", "watch"},
+			},
+			{
+				APIGroups: []string{""},
+				Resources: []string{"secrets"},
+				Verbs:     []string{"get", "list"},
+			},
+			{
+				APIGroups: []string{""},
+				Resources: []string{"persistentvolumes"},
+				Verbs:     []string{"get", "list", "watch", "create", "delete"},
+			},
+			{
+				APIGroups: []string{""},
+				Resources: []string{"persistentvolumeclaims"},
+				Verbs:     []string{"get", "list", "watch", "update"},
+			},
+			{
+				APIGroups: []string{""},
+				Resources: []string{"events"},
+				Verbs:     []string{"list", "watch", "create", "update", "patch"},
+			},
+			{
+				APIGroups: []string{"storage.k8s.io"},
+				Resources: []string{"storageclasses"},
+				Verbs:     []string{"get", "list", "watch"},
+			},
+			{
+				APIGroups: []string{"storage.k8s.io"},
+				Resources: []string{"csinodes"},
+				Verbs:     []string{"get", "list", "watch"},
+			},
+			{
+				APIGroups: []string{"snapshot.storage.k8s.io"},
+				Resources: []string{"volumesnapshotclasses"},
+				Verbs:     []string{"get", "list", "watch"},
+			},
+			{
+				APIGroups: []string{"snapshot.storage.k8s.io"},
+				Resources: []string{"volumesnapshotcontents"},
+				Verbs:     []string{"create", "get", "list", "watch", "update", "delete"},
+			},
+			{
+				APIGroups: []string{"snapshot.storage.k8s.io"},
+				Resources: []string{"volumesnapshots"},
+				Verbs:     []string{"get", "list", "watch", "update"},
+			},
+			{
+				APIGroups: []string{"snapshot.storage.k8s.io"},
+				Resources: []string{"volumesnapshots/status"},
+				Verbs:     []string{"update"},
+			},
+			{
+				APIGroups: []string{"apiextensions.k8s.io"},
+				Resources: []string{"customresourcedefinitions"},
+				Verbs:     []string{"create", "list", "watch", "delete", "get", "update"},
+			},
+		},
+	}
+}
+
+func generateManilaControllerPluginClusterRoleBinding() *rbacv1.ClusterRoleBinding {
+	return &rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "openstack-manila-csi-controllerplugin",
+			Labels: labelsManilaControllerPlugin,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      "openstack-manila-csi-controllerplugin",
+				Namespace: "openshift-manila-csi-driver",
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			Kind:     "ClusterRole",
+			Name:     "openstack-manila-csi-controllerplugin",
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+	}
 }

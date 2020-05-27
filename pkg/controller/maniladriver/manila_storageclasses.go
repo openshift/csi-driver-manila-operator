@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -86,6 +87,29 @@ func (r *ReconcileManilaDriver) handleManilaStorageClass(instance *maniladriverv
 	err = r.client.Create(context.TODO(), sc)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (r *ReconcileManilaDriver) deleteManilaStorageClasses(reqLogger logr.Logger) error {
+	reqLogger.Info("Deleting Manila StorageClasses")
+
+	scs := &storagev1.StorageClassList{}
+	err := r.apiReader.List(context.TODO(), scs, &client.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, sc := range scs.Items {
+		if sc.Provisioner == "manila.csi.openstack.org" {
+			err = r.client.Delete(context.TODO(), &sc)
+			if err != nil {
+				return err
+			}
+
+			reqLogger.Info("Storage Class was deleted succesfully", "StorageClass.Name", sc.Name)
+		}
 	}
 
 	return nil

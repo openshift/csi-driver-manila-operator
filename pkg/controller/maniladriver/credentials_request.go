@@ -59,6 +59,21 @@ func (r *ReconcileManilaDriver) handleCredentialsRequest(instance *maniladriverv
 	return nil
 }
 
+func (r *ReconcileManilaDriver) deleteCredentialsRequest(reqLogger logr.Logger) error {
+	reqLogger.Info("Deleting Credentials Request")
+
+	cr := generateCredentialsRequest()
+
+	err := r.client.Delete(context.TODO(), cr)
+	if err != nil {
+		return err
+	}
+
+	reqLogger.Info("Credentials Request was deleted succesfully", "CredentialsRequest.Name", cr.Name)
+
+	return nil
+}
+
 func generateCredentialsRequest() *credsv1.CredentialsRequest {
 	openstackProvSpec := &credsv1.OpenStackProviderSpec{
 		TypeMeta: metav1.TypeMeta{
