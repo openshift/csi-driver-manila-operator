@@ -1,8 +1,5 @@
 apiVersion: csi.openshift.io/v1alpha1
 kind: ManilaDriver
 metadata:
-  name: example-manilacsi
-  namespace: openshift-manila-csi-driver-operator
-spec:
-  # Add fields here
-  size: 3
+  name: cluster
+spec: {}

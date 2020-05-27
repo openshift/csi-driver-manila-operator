@@ -16,7 +16,7 @@ type ManilaDriverStatus struct {
 
 // ManilaDriver is the Schema for the maniladrivers API
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=maniladrivers,scope=Namespaced
+// +kubebuilder:resource:path=maniladrivers,scope=Cluster
 type ManilaDriver struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

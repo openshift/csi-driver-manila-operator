@@ -37,6 +37,8 @@ const (
 	lastAppliedAnnotationName = "manila.csi.openshift.io/last-applied"
 
 	manilaDriverFinalizer = "finalizer.manila.csi.openshift.io"
+
+	manilaDriverCRName = "cluster"
 )
 
 var log = logf.Log.WithName("controller_maniladriver")
@@ -164,6 +166,10 @@ func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.
 		// Error reading the object - requeue the request.
 		reqLogger.Error(err, "Failed to get %v: %v", request.NamespacedName, err)
 		return reconcile.Result{}, err
+	}
+
+	if instance.Name != manilaDriverCRName {
+		return reconcile.Result{}, fmt.Errorf("invalid ManilaDriver CR name: %v, it must be called %v", instance.Name, manilaDriverCRName)
 	}
 
 	// Check if the ManilaDriver instance is marked to be deleted, which is
