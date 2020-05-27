@@ -135,9 +135,22 @@ func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling ManilaDriver")
 
+	// Make sure we have only one ManilaDriver instance in the system
+	driverList := &maniladriverv1alpha1.ManilaDriverList{}
+	err := r.apiReader.List(context.TODO(), driverList, &client.ListOptions{})
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if len(driverList.Items) > 1 {
+		err = fmt.Errorf("only one instance of ManilaDriver is allowed in the system")
+		reqLogger.Error(err, "Too many instances of ManilaDriver were found")
+		return reconcile.Result{}, err
+	}
+
 	// Fetch the ManilaDriver instance
 	instance := &maniladriverv1alpha1.ManilaDriver{}
-	err := r.apiReader.Get(context.TODO(), request.NamespacedName, instance)
+	err = r.apiReader.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
