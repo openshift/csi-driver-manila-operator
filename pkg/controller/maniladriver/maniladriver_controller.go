@@ -37,6 +37,8 @@ const (
 	lastAppliedAnnotationName = "manila.csi.openshift.io/last-applied"
 
 	manilaDriverFinalizer = "finalizer.manila.csi.openshift.io"
+
+	manilaDriverCRName = "cluster"
 )
 
 var log = logf.Log.WithName("controller_maniladriver")
@@ -87,7 +89,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch owned objects
 	watchOwnedObjects := []runtime.Object{
-		&appsv1.StatefulSet{},
+		&appsv1.Deployment{},
 		&appsv1.DaemonSet{},
 		&corev1.Namespace{},
 		&corev1.Secret{},
@@ -164,6 +166,10 @@ func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.
 		// Error reading the object - requeue the request.
 		reqLogger.Error(err, "Failed to get %v: %v", request.NamespacedName, err)
 		return reconcile.Result{}, err
+	}
+
+	if instance.Name != manilaDriverCRName {
+		return reconcile.Result{}, fmt.Errorf("invalid ManilaDriver CR name: %v, it must be called %v", instance.Name, manilaDriverCRName)
 	}
 
 	// Check if the ManilaDriver instance is marked to be deleted, which is
@@ -281,14 +287,8 @@ func (r *ReconcileManilaDriver) handleManilariverDeployment(instance *maniladriv
 		return reconcile.Result{}, err
 	}
 
-	// Manila Controller Plugin Service
-	err = r.handleManilaControllerPluginService(instance, reqLogger)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Manila Controller Plugin StatefulSet
-	err = r.handleManilaControllerPluginStatefulSet(instance, reqLogger)
+	// Manila Controller Plugin Deployment
+	err = r.handleManilaControllerPluginDeployment(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
