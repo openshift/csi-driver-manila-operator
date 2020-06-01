@@ -16,7 +16,7 @@ spec:
       serviceAccountName: csi-driver-manila-operator
       containers:
         - name: csi-driver-manila-operator
-          image: quay.io/openshift/origin-csi-driver-manila-operator:latest
+          image: quay.io/openshift/origin-csi-driver-manila-operator:4.5
           command:
           - csi-driver-manila-operator
           imagePullPolicy: Always
@@ -32,12 +32,12 @@ spec:
             - name: OPERATOR_NAME
               value: "csi-driver-manila-operator"
             - name: EXTERNAL_PROVISIONER_IMAGE
-              value: "quay.io/openshift/origin-csi-external-provisioner:latest"
+              value: "quay.io/openshift/origin-csi-external-provisioner:4.5"
             - name: EXTERNAL_SNAPSHOTTER_IMAGE
-              value: "quay.io/openshift/origin-csi-external-snapshotter:latest"
+              value: "quay.io/openshift/origin-csi-external-snapshotter:4.5"
             - name: CSI_DRIVER_MANILA_IMAGE
-              value: "quay.io/openshift/origin-csi-driver-manila:latest"
+              value: "quay.io/openshift/origin-csi-driver-manila:4.5"
             - name: CSI_NODE_DRIVER_REGISTRAR_IMAGE
-              value: "quay.io/openshift/origin-csi-node-driver-registrar:latest"
+              value: "quay.io/openshift/origin-csi-node-driver-registrar:4.5"
             - name: CSI_DRIVER_NFS_IMAGE
-              value: "quay.io/openshift/origin-csi-driver-nfs:latest"
+              value: "quay.io/openshift/origin-csi-driver-nfs:4.5"
