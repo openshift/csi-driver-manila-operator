@@ -1,54 +1,48 @@
 # CSI Driver Manila Operator
 
-Operator to create, configure and manage CSI driver for OpenStack Manila in Kubernetes and OpenShift.
+Operator to create, configure and manage CSI driver for OpenStack Manila in OpenShift.
 
 ## Quick Start
 
 ### Installing the operator
 
-#### Operatorhub installation
-
-TBD
-
-#### Manual installation
-
 The operator needs its own namespace, service account, security context, and a few roles and bindings. For example, to install these on OpenShift >= 4.4:
 
 ```sh
-oc apply -f deploy/namespace.yaml -f deploy/crds/csi.openshift.io_maniladrivers_crd.yaml -f deploy/service_account.yaml -f deploy/role_binding.yaml -f deploy/role.yaml -f deploy/operator.yaml -f deploy/crds/csi.openshift.io_v1alpha1_maniladriver_cr.yaml
+oc apply -f deploy/namespace.yaml -f deploy/crds/csi.openshift.io_maniladrivers_crd.yaml -f deploy/service_account.yaml -f deploy/role_binding.yaml -f deploy/role.yaml -f deploy/operator.yaml
 ```
 
-For Kubernetes you will also need to define user credentials to access Manila and put them in a secret. An example manifest can be found in `examples/nfs/secrets.yaml`. The result should look like:
+You can check logs of the operator by executing:
 
 ```sh
-$ cat mysecrets.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: csi-manila-secrets
-  namespace: openshift-manila-csi-driver
-stringData:
-  # Mandatory
-  os-authURL: "http://example.com/identity"
-  os-region: "RegionOne"
-
-  # Authentication using user credentials
-  os-userName: "demo"
-  os-password: "secret"
-  os-projectName: "demo"
-  os-domainID: "default"
-  os-projectDomainID: "default"
+oc logs -f -n openshift-manila-csi-driver-operator $(oc get pods --no-headers -n openshift-manila-csi-driver-operator -o custom-columns=":metadata.name")
 ```
 
-Create the secret with the command:
+### Installing the driver
+
+When the operator is started, you need to create a CR to install the driver:
 
 ```sh
-oc apply -f mysecrets.yaml
+oc apply -f deploy/crds/csi.openshift.io_v1alpha1_maniladriver_cr.yaml
 ```
+
+**Note:** ManilaDriver CR is a singleton, which means you can't create more than one instance of this resource. By convention this should be a cluster-scoped object called `cluster`.
+
+Operator automatically creates required StorageClasses for all Manila share types. Each of them is called `manila-csi-<share_type>`.
+
+To see the list of provisioned Storage Classes execute:
+
+```sh
+oc get storageclasses
+```
+
+All driver's resources are created in  the `openshift-manila-csi-driver` namespace.
 
 ### Creating PVCs and Pods
 
-You're all set now! However, you likely want to test the deployment, so let's create a pvc and pod for testing.
+You're all set now! However, you likely want to test the deployment, so let's create a PVC and POD for testing.
+
+**Note:** In the PVC example we use `manila-csi-default` Storage Class, which may be different in your case.
 
 ```sh
 oc create namespace manila-test
@@ -98,22 +92,20 @@ $ oc exec -n manila-test -it new-nfs-share-pod  -- mount | grep /var/lib/www
 Eventually you want to remove all the testing resources from your cluster. To do so just delete the namespace:
 
 ```sh
-$ oc delete namespace manila-test
+oc delete namespace manila-test
 ```
 
-#### Removing the operator using the operator catalog
+Manila provisioner will automatically delete the share in Manila service as well.
 
-TBD
+### Removing the driver and operator
 
-#### Removing the operator manually
-
-First, delete the CR. The driver and its cluster-scoped resources will be removed along with it.
+First, remove the CR. The driver and its cluster-scoped resources will be deleted along with it.
 
 ```sh
 oc delete -f deploy/crds/csi.openshift.io_v1alpha1_maniladriver_cr.yaml
 ```
 
-When the driver is deleted, remove the ramaining parts of the operator.
+When the driver is deleted, remove the remaining parts of the operator.
 
 ```sh
 oc delete -f deploy/crds/csi.openshift.io_maniladrivers_crd.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/service_account.yaml -f deploy/namespace.yaml

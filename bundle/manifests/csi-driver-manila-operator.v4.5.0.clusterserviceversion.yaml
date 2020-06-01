@@ -5,7 +5,7 @@ metadata:
   namespace: openshift-manila-csi-driver-operator
   annotations:
     alm-examples: >-
-      [{"apiVersion":"csi.openshift.io/v1alpha1","kind":"ManilaDriver","metadata":{"name":"cluster"}]
+      [{"apiVersion":"csi.openshift.io/v1alpha1","kind":"ManilaDriver","metadata":{"name":"cluster"}}]
     categories: Storage
     certified: 'false'
     createdAt: 'Tue Mar 17 17:27:30 CET 2020'
