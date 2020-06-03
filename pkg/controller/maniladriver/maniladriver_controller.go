@@ -211,6 +211,11 @@ func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.
 		return reconcile.Result{}, err
 	}
 
+	err = r.handleCACertConfigMap(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// Credentials Request
 	err = r.handleCredentialsRequest(instance, reqLogger)
 	if err != nil {
@@ -309,15 +314,6 @@ func (r *ReconcileManilaDriver) handleManilariverDeployment(instance *maniladriv
 	}
 
 	return reconcile.Result{}, nil
-}
-
-func (r *ReconcileManilaDriver) getCloudProviderCert() (string, error) {
-	cm := &corev1.ConfigMap{}
-	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: "cloud-provider-config", Namespace: "openshift-config"}, cm)
-	if err != nil {
-		return "", err
-	}
-	return string(cm.Data["ca-bundle.pem"]), nil
 }
 
 // getManilaShareTypes returns all available share types
