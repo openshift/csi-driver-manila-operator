@@ -24,6 +24,15 @@ const (
 func (r *ReconcileManilaDriver) createDriverCredentialsSecret(instance *maniladriverv1alpha1.ManilaDriver, cloudConfig clientconfig.Cloud, reqLogger logr.Logger) error {
 	reqLogger.Info("Reconciling Manila Credentials")
 
+	cert, err := r.getCloudProviderCert()
+	if err != nil {
+		return err
+	}
+
+	if cert != "" {
+		cloudConfig.CACertFile = "/usr/share/pki/ca-trust-source/cloud-provider-ca-bundle.pem"
+	}
+
 	secret := generateSecret(cloudConfig)
 
 	if err := annotator.SetLastAppliedAnnotation(secret); err != nil {
@@ -31,7 +40,7 @@ func (r *ReconcileManilaDriver) createDriverCredentialsSecret(instance *maniladr
 	}
 
 	found := &corev1.Secret{}
-	err := r.apiReader.Get(context.TODO(), types.NamespacedName{Name: driverSecretName, Namespace: secretNamespace}, found)
+	err = r.apiReader.Get(context.TODO(), types.NamespacedName{Name: driverSecretName, Namespace: secretNamespace}, found)
 	if err == nil {
 		// Check if we need to update the object
 		equal, err := compareLastAppliedAnnotations(found, secret)
@@ -106,6 +115,9 @@ func generateSecret(cloud clientconfig.Cloud) *corev1.Secret {
 	} else if cloud.AuthInfo.UserDomainName != "" {
 		data["os-userDomainName"] = []byte(cloud.AuthInfo.UserDomainName)
 		data["os-domainName"] = []byte(cloud.AuthInfo.UserDomainName)
+	}
+	if cloud.CACertFile != "" {
+		data["os-certAuthorityPath"] = []byte(cloud.CACertFile)
 	}
 
 	secret := corev1.Secret{
