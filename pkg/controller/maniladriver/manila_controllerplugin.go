@@ -115,6 +115,10 @@ func generateManilaControllerPluginDeployment() *appsv1.Deployment {
 									Name:      "plugin-dir",
 									MountPath: "/var/lib/kubelet/plugins/manila.csi.openstack.org",
 								},
+								{
+									Name:      "openstack-certificates",
+									MountPath: "/usr/share/pki/ca-trust-source",
+								},
 							},
 						},
 						{
@@ -144,6 +148,10 @@ func generateManilaControllerPluginDeployment() *appsv1.Deployment {
 								{
 									Name:      "plugin-dir",
 									MountPath: "/var/lib/kubelet/plugins/manila.csi.openstack.org",
+								},
+								{
+									Name:      "openstack-certificates",
+									MountPath: "/usr/share/pki/ca-trust-source",
 								},
 							},
 						},
@@ -208,6 +216,10 @@ func generateManilaControllerPluginDeployment() *appsv1.Deployment {
 									MountPath:        "/var/lib/kubelet/pods",
 									MountPropagation: &mountPropagationBidirectional,
 								},
+								{
+									Name:      "openstack-certificates",
+									MountPath: "/usr/share/pki/ca-trust-source",
+								},
 							},
 						},
 					},
@@ -236,6 +248,17 @@ func generateManilaControllerPluginDeployment() *appsv1.Deployment {
 								HostPath: &corev1.HostPathVolumeSource{
 									Path: "/var/lib/kubelet/pods",
 									Type: &hostPathDirectory,
+								},
+							},
+						},
+						{
+							Name: "openstack-certificates",
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "openstack-certificates",
+									},
+									Optional: &trueVar,
 								},
 							},
 						},
