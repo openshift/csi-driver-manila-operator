@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: csi-driver-manila-operator.v4.5.0
+  name: csi-driver-manila-operator.v4.6.0
   namespace: openshift-manila-csi-driver-operator
   annotations:
     alm-examples: >-
@@ -35,7 +35,7 @@ spec:
     provisioning of RWX persistent volumes on OpenStack.
 
   maturity: alpha
-  version: 4.5.0
+  version: 4.6.0
   replaces: ''
   skips: []
   minKubeVersion: 1.17.0
@@ -438,16 +438,16 @@ spec:
                       - name: OPERATOR_NAME
                         value: csi-driver-manila-operator
                       - name: EXTERNAL_PROVISIONER_IMAGE
-                        value: 'quay.io/openshift/origin-csi-external-provisioner:4.5'
+                        value: 'quay.io/openshift/origin-csi-external-provisioner:4.6'
                       - name: EXTERNAL_SNAPSHOTTER_IMAGE
-                        value: 'quay.io/openshift/origin-csi-external-snapshotter:4.5'
+                        value: 'quay.io/openshift/origin-csi-external-snapshotter:4.6'
                       - name: CSI_DRIVER_MANILA_IMAGE
-                        value: 'quay.io/openshift/origin-csi-driver-manila:4.5'
+                        value: 'quay.io/openshift/origin-csi-driver-manila:4.6'
                       - name: CSI_NODE_DRIVER_REGISTRAR_IMAGE
-                        value: 'quay.io/openshift/origin-csi-node-driver-registrar:4.5'
+                        value: 'quay.io/openshift/origin-csi-node-driver-registrar:4.6'
                       - name: CSI_DRIVER_NFS_IMAGE
-                        value: 'quay.io/openshift/origin-csi-driver-nfs:4.5'
-                    image: 'quay.io/openshift/origin-csi-driver-manila-operator:4.5'
+                        value: 'quay.io/openshift/origin-csi-driver-nfs:4.6'
+                    image: 'quay.io/openshift/origin-csi-driver-manila-operator:4.6'
                     imagePullPolicy: Always
                     name: csi-driver-manila-operator
                     resources: {}
