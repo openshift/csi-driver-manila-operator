@@ -134,6 +134,10 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 									Name:      "registration-dir",
 									MountPath: "/registration",
 								},
+								{
+									Name:      "openstack-certificates",
+									MountPath: "/usr/share/pki/ca-trust-source",
+								},
 							},
 						},
 						{
@@ -192,6 +196,10 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 									Name:      "fwd-plugin-dir",
 									MountPath: "/var/lib/kubelet/plugins/csi-nfsplugin",
 								},
+								{
+									Name:      "openstack-certificates",
+									MountPath: "/usr/share/pki/ca-trust-source",
+								},
 							},
 						},
 					},
@@ -220,6 +228,17 @@ func generateManilaNodePluginManifest() *appsv1.DaemonSet {
 								HostPath: &corev1.HostPathVolumeSource{
 									Path: "/var/lib/kubelet/plugins/csi-nfsplugin",
 									Type: &hostPathDirectory,
+								},
+							},
+						},
+						{
+							Name: "openstack-certificates",
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "openstack-certificates",
+									},
+									Optional: &trueVar,
 								},
 							},
 						},

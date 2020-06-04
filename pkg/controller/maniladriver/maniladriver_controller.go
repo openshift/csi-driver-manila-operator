@@ -2,7 +2,10 @@ package maniladriver
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"net/http"
 
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/go-logr/logr"
@@ -208,6 +211,11 @@ func (r *ReconcileManilaDriver) Reconcile(request reconcile.Request) (reconcile.
 		return reconcile.Result{}, err
 	}
 
+	err = r.handleCACertConfigMap(instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// Credentials Request
 	err = r.handleCredentialsRequest(instance, reqLogger)
 	if err != nil {
@@ -327,6 +335,27 @@ func (r *ReconcileManilaDriver) getManilaShareTypes(cloud clientconfig.Cloud, re
 	provider, err := openstack.NewClient(opts.IdentityEndpoint)
 	if err != nil {
 		return nil, err
+	}
+
+	cert, err := r.getCloudProviderCert()
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, fmt.Errorf("Failed to get cloud provider CA certificate: %v", err)
+	}
+
+	if cert != "" {
+		certPool, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, fmt.Errorf("Create system cert pool failed: %v", err)
+		}
+		certPool.AppendCertsFromPEM([]byte(cert))
+		client := http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: certPool,
+				},
+			},
+		}
+		provider.HTTPClient = client
 	}
 
 	err = openstack.Authenticate(provider, *opts)
