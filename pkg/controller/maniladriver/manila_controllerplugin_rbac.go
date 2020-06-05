@@ -407,6 +407,11 @@ func generateManilaControllerPluginClusterRole() *rbacv1.ClusterRole {
 			},
 			{
 				APIGroups: []string{"snapshot.storage.k8s.io"},
+				Resources: []string{"volumesnapshotcontents/status"},
+				Verbs:     []string{"update"},
+			},
+			{
+				APIGroups: []string{"snapshot.storage.k8s.io"},
 				Resources: []string{"volumesnapshots"},
 				Verbs:     []string{"get", "list", "watch", "update"},
 			},
