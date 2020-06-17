@@ -19,18 +19,18 @@ metadata:
     repository: 'https://github.com/openshift/csi-driver-manila-operator'
     "operatorframework.io/suggested-namespace": openshift-manila-csi-driver-operator
 spec:
-  displayName: CSI Driver Manila Operator
+  displayName: Manila CSI Driver Operator
   description: >+
-    The CSI Manila driver is able to create and mount OpenStack Manila shares
+    The Manila CSI driver is able to create and mount OpenStack Manila shares
     along with snapshots and recovering shares from snapshots.
 
     The driver leverages OpenStack Manila service to provide scalable and
     persistent storage for stateful applications.
 
-    CSI driver Manila documentation is available
+    Manila CSI driver documentation is available
     [here](https://github.com/kubernetes/cloud-provider-openstack/blob/master/docs/using-manila-csi-plugin.md).
 
-    CSI Driver Manila Operator packages, deploys, manages, upgrades the
+    Manila CSI Driver Operator packages, deploys, manages, upgrades the
     OpenStack Manila CSI Driver on Kubernetes and OpenShift for dynamic
     provisioning of RWX persistent volumes on OpenStack.
 
