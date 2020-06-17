@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: csi-driver-manila-operator.v4.6.0
+  name: manila-csi-driver-operator.v4.6.0
   namespace: openshift-manila-csi-driver-operator
   annotations:
     alm-examples: >-
