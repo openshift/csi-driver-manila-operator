@@ -93,6 +93,7 @@ func generateNFSNodePluginManifest() *appsv1.DaemonSet {
 							Args: []string{
 								"--nodeid=$(NODE_ID)",
 								"--endpoint=unix://plugin/csi.sock",
+								"--mount-permissions=0777",
 							},
 							Env: []corev1.EnvVar{
 								{
