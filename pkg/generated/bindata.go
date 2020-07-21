@@ -107,20 +107,21 @@ spec:
           env:
             - name: DRIVER_NAME
               value: manila.csi.openstack.org
-#            - name: NODE_ID
-#              valueFrom:
-#                fieldRef:
-#                  fieldPath: spec.nodeName
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
             - name: CSI_ENDPOINT
               value: unix:///plugin/csi.sock
             - name: MANILA_SHARE_PROTO
               value: NFS
             - name: FWD_CSI_ENDPOINT
               value: unix:///plugin/csi-nfs.sock
-            # TODO: add certificate to /usr/share/pki/ca-trust-source
           volumeMounts:
             - name: socket-dir
               mountPath: /plugin
+            - name: cacert
+              mountPath: /usr/share/pki/ca-trust-source
         # TODO: fix manila CSI driver not to require NFS driver socket!
         - name: csi-driver-nfs
           image: quay.io/openshift/origin-csi-driver-nfs:latest
@@ -172,6 +173,17 @@ spec:
       volumes:
         - name: socket-dir
           emptyDir: {}
+        - name: cacert
+          # Extract ca-bundle.pem to /usr/share/pki/ca-trust-source if present.
+          # Let the pod start when the ConfigMap does not exist or the certificate
+          # is not preset there. The certificate file will be created once the
+          # ConfigMap is created / the cerificate is added to it.
+          configMap:
+            name: cloud-provider-config
+            items:
+            - key: ca-bundle.pem
+              path: ca-bundle.pem
+            optional: true
 `)
 
 func controllerYamlBytes() ([]byte, error) {
@@ -356,6 +368,8 @@ spec:
               mountPath: /var/lib/kubelet/plugins/manila.csi.openstack.org
             - name: fwd-plugin-dir
               mountPath: /var/lib/kubelet/plugins/csi-nfsplugin
+            - name: cacert
+              mountPath: /usr/share/pki/ca-trust-source
         - name: csi-node-driver-registrar
           securityContext:
             privileged: true
@@ -391,6 +405,17 @@ spec:
           hostPath:
             path: /var/lib/kubelet/plugins/csi-nfsplugin
             type: DirectoryOrCreate
+        - name: cacert
+          # Extract ca-bundle.pem to /usr/share/pki/ca-trust-source if present.
+          # Let the pod start when the ConfigMap does not exist or the certificate
+          # is not preset there. The certificate file will be created once the
+          # ConfigMap is created / the cerificate is added to it.
+          configMap:
+            name: cloud-provider-config
+            items:
+            - key: ca-bundle.pem
+              path: ca-bundle.pem
+            optional: true
 `)
 
 func nodeYamlBytes() ([]byte, error) {

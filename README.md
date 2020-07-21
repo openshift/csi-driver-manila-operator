@@ -17,4 +17,9 @@ The operator is based on [openshift/library-go](https://github.com/openshift/lib
 
 ## Usage
 
-TODO
+Check deployment YAML files in `manifests/` directory.
+
+The operator makes few assumptions about the namespace where it runs:
+
+* If underlying OpenStack uses self-signed certificate, the operator expects the ceritificate is present in a ConfigMap named "cloud-provider-config" with key "ca-bundle.pem" in the namespace where it runs. Generally, it should be a copy of "openshift-config/cloud-provider-config" ConfigMap. It then uses the certificate to talk to OpenStack API.
+* The operand (= the CSI driver) must run in the same namespace as the operator, for the same reason as above - it uses the same self-signed OpenStack certificate, if provided.
