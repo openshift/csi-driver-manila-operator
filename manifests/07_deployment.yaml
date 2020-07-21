@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manila-csi-driver-operator
+  namespace: openshift-cluster-csi-drivers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: manila-csi-driver-operator
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        name: manila-csi-driver-operator
+    spec:
+      containers:
+      - args:
+        - start
+        env:
+        - name: DRIVER_IMAGE
+          value: quay.io/openshift/origin-csi-driver-manila:latest
+        - name: PROVISIONER_IMAGE
+          value: quay.io/openshift/origin-csi-external-provisioner:latest
+        - name: ATTACHER_IMAGE
+          value: quay.io/openshift/origin-csi-external-attacher:latest
+        - name: RESIZER_IMAGE
+          value: quay.io/openshift/origin-csi-external-resizer:latest
+        - name: SNAPSHOTTER_IMAGE
+          value: quay.io/openshift/origin-csi-external-snapshotter:latest
+        - name: NODE_DRIVER_REGISTRAR_IMAGE
+          value: quay.io/openshift/origin-csi-node-driver-registrar:latest
+        - name: LIVENESS_PROBE_IMAGE
+          value: quay.io/openshift/origin-csi-livenessprobe:latest
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: quay.io/openshift/origin-csi-driver-manila-operator:latest
+        imagePullPolicy: IfNotPresent
+        name: manila-csi-driver-operator
+      priorityClassName: system-cluster-critical
+      serviceAccountName: manila-csi-driver-operator
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists

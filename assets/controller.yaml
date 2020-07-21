@@ -38,10 +38,10 @@ spec:
           env:
             - name: DRIVER_NAME
               value: manila.csi.openstack.org
-#            - name: NODE_ID
-#              valueFrom:
-#                fieldRef:
-#                  fieldPath: spec.nodeName
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
             - name: CSI_ENDPOINT
               value: unix:///plugin/csi.sock
             - name: MANILA_SHARE_PROTO
