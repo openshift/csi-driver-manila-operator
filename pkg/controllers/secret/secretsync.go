@@ -42,7 +42,6 @@ func NewController(
 	informers v1helpers.KubeInformersForNamespaces,
 	eventRecorder events.Recorder) factory.Controller {
 
-	// Watch config-map
 	// Produce secrets in the operator namespace
 	secretInformer := informers.InformersFor(util.OperatorNamespace)
 	c := &Controller{

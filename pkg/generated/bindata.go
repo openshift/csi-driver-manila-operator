@@ -697,11 +697,11 @@ metadata:
   name: csi-manila-SHARE_NAME
 parameters:
   type: SHARE_NAME
-  csi.storage.k8s.io/provisioner-secret-name:       manila-credentials
+  csi.storage.k8s.io/provisioner-secret-name:       manila-driver-credentials
   csi.storage.k8s.io/provisioner-secret-namespace:  openshift-cluster-csi-drivers
-  csi.storage.k8s.io/node-stage-secret-name:        manila-credentials
+  csi.storage.k8s.io/node-stage-secret-name:        manila-driver-credentials
   csi.storage.k8s.io/node-stage-secret-namespace:   openshift-cluster-csi-drivers
-  csi.storage.k8s.io/node-publish-secret-name:      manila-credentials
+  csi.storage.k8s.io/node-publish-secret-name:      manila-driver-credentials
   csi.storage.k8s.io/node-publish-secret-namespace: openshift-cluster-csi-drivers
 provisioner: manila.csi.openstack.org
 reclaimPolicy: "Delete"

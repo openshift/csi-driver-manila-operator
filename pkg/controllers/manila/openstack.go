@@ -10,13 +10,11 @@ import (
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
 	"github.com/openshift/library-go/pkg/operator/v1helpers"
-	corelisters "k8s.io/client-go/listers/core/v1"
 	"sigs.k8s.io/yaml"
 )
 
 type openStackClient struct {
-	cloud           *clientconfig.Cloud
-	configMapLister corelisters.ConfigMapLister
+	cloud *clientconfig.Cloud
 }
 
 func NewOpenStackClient(
@@ -28,8 +26,7 @@ func NewOpenStackClient(
 		return nil, err
 	}
 	return &openStackClient{
-		cloud:           cloud,
-		configMapLister: informers.InformersFor(util.CloudConfigNamespace).Core().V1().ConfigMaps().Lister(),
+		cloud: cloud,
 	}, nil
 }
 
