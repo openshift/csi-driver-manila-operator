@@ -1,0 +1,105 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: manila-csi-driver-controller
+  namespace: openshift-cluster-csi-drivers
+spec:
+  selector:
+    matchLabels:
+      app: manila-csi-driver-controller
+  serviceName: manila-csi-driver-controller
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: manila-csi-driver-controller
+    spec:
+      serviceAccount: manila-csi-driver-controller-sa
+      priorityClassName: system-cluster-critical
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+      containers:
+        # Warning: the operator expects the first container to be the CSI driver
+        - name: csi-driver
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+            allowPrivilegeEscalation: true
+          image: ${DRIVER_IMAGE}
+          args:
+            - --v=5
+            - --nodeid=$(NODE_ID)
+            - --endpoint=$(CSI_ENDPOINT)
+            - --drivername=$(DRIVER_NAME)
+            - --share-protocol-selector=$(MANILA_SHARE_PROTO)
+            - --fwdendpoint=$(FWD_CSI_ENDPOINT)
+          env:
+            - name: DRIVER_NAME
+              value: manila.csi.openstack.org
+#            - name: NODE_ID
+#              valueFrom:
+#                fieldRef:
+#                  fieldPath: spec.nodeName
+            - name: CSI_ENDPOINT
+              value: unix:///plugin/csi.sock
+            - name: MANILA_SHARE_PROTO
+              value: NFS
+            - name: FWD_CSI_ENDPOINT
+              value: unix:///plugin/csi-nfs.sock
+            # TODO: add certificate to /usr/share/pki/ca-trust-source
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /plugin
+        # TODO: fix manila CSI driver not to require NFS driver socket!
+        - name: csi-driver-nfs
+          image: quay.io/openshift/origin-csi-driver-nfs:latest
+          args:
+            - "--nodeid=$(NODE_ID)"
+            - "--endpoint=unix://plugin/csi-nfs.sock"
+            - "--mount-permissions=0777"
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /plugin
+        - name: csi-provisioner
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+            allowPrivilegeEscalation: true
+          image: ${PROVISIONER_IMAGE}
+          args:
+            - --csi-address=$(ADDRESS)
+            - --feature-gates=Topology=true
+            - --v=5
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+        - name: csi-snapshotter
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+            allowPrivilegeEscalation: true
+          image: ${SNAPSHOTTER_IMAGE}
+          args:
+            - --csi-address=$(ADDRESS)
+            - --v=5
+          env:
+          - name: ADDRESS
+            value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          volumeMounts:
+          - mountPath: /var/lib/csi/sockets/pluginproxy/
+            name: socket-dir
+      volumes:
+        - name: socket-dir
+          emptyDir: {}

@@ -1,0 +1,86 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: manila-csi-driver-node
+  namespace: openshift-cluster-csi-drivers
+spec:
+  selector:
+    matchLabels:
+      app: manila-csi-driver-node
+  template:
+    metadata:
+      labels:
+        app: manila-csi-driver-node
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccount: manila-csi-driver-node-sa
+      priorityClassName: system-node-critical
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+      containers:
+        - name: csi-driver
+          securityContext:
+            privileged: true
+          image: ${DRIVER_IMAGE}
+          args:
+            - --v=5
+            - "--nodeid=$(NODE_ID)"
+            - "--endpoint=$(CSI_ENDPOINT)"
+            - "--drivername=$(DRIVER_NAME)"
+            - "--share-protocol-selector=$(MANILA_SHARE_PROTO)"
+            - "--fwdendpoint=$(FWD_CSI_ENDPOINT)"
+          env:
+            - name: DRIVER_NAME
+              value: manila.csi.openstack.org
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CSI_ENDPOINT
+              value: unix:///var/lib/kubelet/plugins/manila.csi.openstack.org/csi.sock
+            - name: FWD_CSI_ENDPOINT
+              value: unix:///var/lib/kubelet/plugins/csi-nfsplugin/csi.sock
+            - name: MANILA_SHARE_PROTO
+              value: NFS
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /var/lib/kubelet/plugins/manila.csi.openstack.org
+            - name: fwd-plugin-dir
+              mountPath: /var/lib/kubelet/plugins/csi-nfsplugin
+        - name: csi-node-driver-registrar
+          securityContext:
+            privileged: true
+          image: ${NODE_DRIVER_REGISTRAR_IMAGE}
+          args:
+            - --v=5
+            - --csi-address=/csi/csi.sock
+            - --kubelet-registration-path=/var/lib/kubelet/plugins/manila.csi.openstack.org/csi.sock
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -rf /var/lib/kubelet/plugins/manila.csi.openstack.org/csi.sock"]
+          env:
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration
+      volumes:
+        - name: registration-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry/
+            type: Directory
+        - name: plugin-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/manila.csi.openstack.org
+            type: DirectoryOrCreate
+        - name: fwd-plugin-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/csi-nfsplugin
+            type: DirectoryOrCreate

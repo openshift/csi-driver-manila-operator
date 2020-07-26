@@ -1,0 +1,50 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: manila-csi-driver-node-nfs
+  namespace: openshift-cluster-csi-drivers
+spec:
+  selector:
+    matchLabels:
+      app: manila-csi-driver-node-nfs
+  template:
+    metadata:
+      labels:
+        app: manila-csi-driver-node-nfs
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccount: manila-csi-driver-node-sa
+      priorityClassName: system-node-critical
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+      containers:
+        - name: csi-driver
+          securityContext:
+            privileged: true
+          image: quay.io/openshift/origin-csi-driver-nfs:latest
+          args:
+            - "--nodeid=$(NODE_ID)"
+            - "--endpoint=unix://plugin/csi.sock"
+            - "--mount-permissions=0777"
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /plugin
+            - name: pods-mount-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: Bidirectional
+      volumes:
+        - name: plugin-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/csi-nfsplugin
+            type: DirectoryOrCreate
+        - name: pods-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: DirectoryOrCreate
