@@ -23,7 +23,7 @@ spec:
         - name: csi-driver
           securityContext:
             privileged: true
-          image: quay.io/openshift/origin-csi-driver-nfs:latest
+          image: ${NFS_DRIVER_IMAGE}
           args:
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=unix://plugin/csi.sock"

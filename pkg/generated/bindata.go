@@ -124,7 +124,7 @@ spec:
               mountPath: /usr/share/pki/ca-trust-source
         # TODO: fix manila CSI driver not to require NFS driver socket!
         - name: csi-driver-nfs
-          image: quay.io/openshift/origin-csi-driver-nfs:latest
+          image: ${NFS_DRIVER_IMAGE}
           args:
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=unix://plugin/csi-nfs.sock"
@@ -275,7 +275,7 @@ spec:
         - name: csi-driver
           securityContext:
             privileged: true
-          image: quay.io/openshift/origin-csi-driver-nfs:latest
+          image: ${NFS_DRIVER_IMAGE}
           args:
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=unix://plugin/csi.sock"

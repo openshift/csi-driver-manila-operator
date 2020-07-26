@@ -1,8 +1,10 @@
 package operator
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/openshift/csi-driver-manila-operator/pkg/controllers/manila"
 	"github.com/openshift/csi-driver-manila-operator/pkg/controllers/secret"
@@ -22,6 +24,8 @@ import (
 
 const (
 	operandName = "manila-csi-driver"
+
+	nfsImageEnvName = "NFS_DRIVER_IMAGE"
 )
 
 func RunOperator(ctx context.Context, controllerConfig *controllercmd.ControllerContext) error {
@@ -63,7 +67,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		string(operatorapi.ManilaCSIDriver),
 		operandName,
 		util.OperatorNamespace,
-		generated.MustAsset,
+		assetWithNFSDriver,
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperatorNamespace),
 		csicontrollerset.WithControllerService("controller.yaml"),
@@ -76,7 +80,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		"nfs-csi-driver",
 		util.OperatorNamespace,
 		operatorClient,
-		generated.MustAsset,
+		assetWithNFSDriver,
 		kubeClient,
 		controllerConfig.EventRecorder,
 	).WithNodeService(kubeInformersForNamespaces.InformersFor(util.OperatorNamespace).Apps().V1().DaemonSets(), "node-nfs.yaml")
@@ -113,4 +117,17 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 	<-ctx.Done()
 
 	return fmt.Errorf("stopped")
+}
+
+// CSIDriverController can replace only a single driver in driver manifests.
+// Manila needs to replace two of them: Manila driver and NFS driver image.
+// Let the Manila image be replaced by CSIDriverController and NFS in this
+// custom asset loading func.
+func assetWithNFSDriver(file string) []byte {
+	asset := generated.MustAsset(file)
+	nfsImage := os.Getenv(nfsImageEnvName)
+	if nfsImage == "" {
+		return asset
+	}
+	return bytes.ReplaceAll(asset, []byte("${NFS_DRIVER_IMAGE}"), []byte(nfsImage))
 }

@@ -20,6 +20,8 @@ spec:
         env:
         - name: DRIVER_IMAGE
           value: quay.io/openshift/origin-csi-driver-manila:latest
+        - name: NFS_DRIVER_IMAGE
+          value: quay.io/openshift/origin-csi-driver-nfs:latest
         - name: PROVISIONER_IMAGE
           value: quay.io/openshift/origin-csi-external-provisioner:latest
         - name: ATTACHER_IMAGE
