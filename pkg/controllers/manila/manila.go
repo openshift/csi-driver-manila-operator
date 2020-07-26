@@ -3,6 +3,7 @@ package manila
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
@@ -11,8 +12,10 @@ import (
 	"github.com/openshift/library-go/pkg/controller/factory"
 	"github.com/openshift/library-go/pkg/operator/events"
 	"github.com/openshift/library-go/pkg/operator/resource/resourceapply"
+	"github.com/openshift/library-go/pkg/operator/resource/resourcemerge"
 	"github.com/openshift/library-go/pkg/operator/v1helpers"
 	storagev1 "k8s.io/api/storage/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/kubernetes"
@@ -114,9 +117,9 @@ func (c *Controller) sync(ctx context.Context, syncCtx factory.SyncContext) erro
 			}
 			c.controllersRunning = true
 		}
-		prereqCnd.Status = operatorv1.ConditionFalse
+		prereqCnd.Status = operatorv1.ConditionTrue
 		prereqCnd.Message = fmt.Sprintf("Manila detected with %s share types", len(shareTypes))
-		err := c.syncStorageClasses(shareTypes)
+		err := c.syncStorageClasses(ctx, shareTypes)
 		if err != nil {
 			return err
 		}
@@ -129,12 +132,12 @@ func (c *Controller) sync(ctx context.Context, syncCtx factory.SyncContext) erro
 	return nil
 }
 
-func (c *Controller) syncStorageClasses(shareTypes []sharetypes.ShareType) error {
+func (c *Controller) syncStorageClasses(ctx context.Context, shareTypes []sharetypes.ShareType) error {
 	var errs []error
 	for _, shareType := range shareTypes {
 		klog.V(4).Infof("Syncing storage class for shareType type %s", shareType.Name)
 		sc := c.generateStorageClass(shareType)
-		_, _, err := resourceapply.ApplyStorageClass(c.kubeClient.StorageV1(), c.eventRecorder, sc)
+		err := c.applyStorageClass(ctx, sc)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -143,6 +146,31 @@ func (c *Controller) syncStorageClasses(shareTypes []sharetypes.ShareType) error
 		return errors.NewAggregate(errs)
 	}
 	return nil
+}
+
+func (c *Controller) applyStorageClass(ctx context.Context, expected *storagev1.StorageClass) error {
+	current, err := c.storageClassLister.Get(expected.Name)
+	if err == nil {
+		if !reflect.DeepEqual(expected.Parameters, current.Parameters) {
+			// StorageClass.Parameters changed. Typically, secret namespace
+			// is different when moving from OLM to non-OLM operator.
+			// Delete the old class and create a new one.
+			if err := c.kubeClient.StorageV1().StorageClasses().Delete(ctx, expected.Name, metav1.DeleteOptions{}); err != nil {
+				if apierrors.IsNotFound(err) {
+					err = nil
+				}
+				return err
+			}
+			// Merge existing and expected ObjectMeta (esp. default storage class)
+			var modified bool
+			currentCopy := current.DeepCopy()
+			resourcemerge.EnsureObjectMeta(&modified, &currentCopy.ObjectMeta, expected.ObjectMeta)
+			expected.ObjectMeta = currentCopy.ObjectMeta
+			// Fall through to ApplyStorageClass, it will create a new class.
+		}
+	}
+	_, _, err = resourceapply.ApplyStorageClass(c.kubeClient.StorageV1(), c.eventRecorder, expected)
+	return err
 }
 
 func (c *Controller) generateStorageClass(shareType sharetypes.ShareType) *storagev1.StorageClass {
