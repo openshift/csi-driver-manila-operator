@@ -2,10 +2,10 @@ package manila
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"time"
 
+	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
@@ -29,7 +29,7 @@ import (
 //    manilaOperatorSet).
 // 2) Creates StorageClass for each share type provided by Manila.
 // 3) If there is no Manila in the OpenStack where the cluster runs,
-//    it marks the operator with condition PrereqSatisfied=false.
+//    it marks the operator with condition Disabled=true.
 //
 // Note that the CSI driver(s) are not un-installed when Manila becomes
 // missing or it stops providing shares of given type - Manila bight be
@@ -56,6 +56,8 @@ const (
 	// new share types in Manila and create StorageClasses for them at least
 	// once per this interval.
 	resyncInterval = 1 * time.Minute
+
+	operatorConditionPrefix = "ManilaController"
 )
 
 func NewController(
@@ -93,43 +95,35 @@ func (c *Controller) sync(ctx context.Context, syncCtx factory.SyncContext) erro
 		return nil
 	}
 
-	prereqCnd := operatorv1.OperatorCondition{
-		Type:   "ManilaController" + operatorv1.OperatorStatusTypePrereqsSatisfied,
-		Status: operatorv1.ConditionTrue,
-	}
-
 	shareTypes, err := c.openStackClient.GetShareTypes()
 	if err != nil {
-		// TODO: add PrereqsSatisfied=false when there is no Manila!
-		return err
-	}
-
-	if len(shareTypes) == 0 {
-		prereqCnd.Status = operatorv1.ConditionFalse
-		prereqCnd.Message = "Manila detected, but does not provide any share types"
-		klog.V(4).Infof("Manila does not provide any share types")
-	} else {
-		// Manila has some shares: start the actual CSI driver controller sets
-		if !c.controllersRunning {
-			klog.V(4).Infof("Starting CSI driver controllers")
-			for _, ctrl := range c.csiControllers {
-				go ctrl.Run(ctx, 1)
-			}
-			c.controllersRunning = true
-		}
-		prereqCnd.Status = operatorv1.ConditionTrue
-		prereqCnd.Message = fmt.Sprintf("Manila detected with %s share types", len(shareTypes))
-		err := c.syncStorageClasses(ctx, shareTypes)
-		if err != nil {
+		switch err.(type) {
+		case *gophercloud.ErrEndpointNotFound:
+			// OpenStack does not support manila, report the operator as disabled
+			return c.setDisabled("This OpenStack does not provide Manila service")
+		default:
 			return err
 		}
 	}
-	if _, _, err := v1helpers.UpdateStatus(c.operatorClient,
-		v1helpers.UpdateConditionFn(prereqCnd),
-	); err != nil {
+
+	if len(shareTypes) == 0 {
+		klog.V(4).Infof("Manila does not provide any share types")
+		return c.setDisabled("Manila does not provide any share types")
+	}
+	// Manila has some shares: start the actual CSI driver controller sets
+	if !c.controllersRunning {
+		klog.V(4).Infof("Starting CSI driver controllers")
+		for _, ctrl := range c.csiControllers {
+			go ctrl.Run(ctx, 1)
+		}
+		c.controllersRunning = true
+	}
+	err = c.syncStorageClasses(ctx, shareTypes)
+	if err != nil {
 		return err
 	}
-	return nil
+
+	return c.setEnabled()
 }
 
 func (c *Controller) syncStorageClasses(ctx context.Context, shareTypes []sharetypes.ShareType) error {
@@ -191,4 +185,35 @@ func (c *Controller) generateStorageClass(shareType sharetypes.ShareType) *stora
 		},
 	}
 	return sc
+}
+
+func (c *Controller) setEnabled() error {
+	availableCnd := operatorv1.OperatorCondition{
+		Type:   operatorConditionPrefix + operatorv1.OperatorStatusTypeAvailable,
+		Status: operatorv1.ConditionTrue,
+	}
+	_, _, err := v1helpers.UpdateStatus(c.operatorClient,
+		v1helpers.UpdateConditionFn(availableCnd),
+		removeConditionFn(operatorConditionPrefix+"Disabled"))
+	return err
+}
+
+func (c *Controller) setDisabled(msg string) error {
+	disabledCnd := operatorv1.OperatorCondition{
+		Type:    operatorConditionPrefix + "Disabled",
+		Status:  operatorv1.ConditionTrue,
+		Reason:  "NoManila",
+		Message: msg,
+	}
+	_, _, err := v1helpers.UpdateStatus(c.operatorClient,
+		v1helpers.UpdateConditionFn(disabledCnd),
+		removeConditionFn(operatorConditionPrefix+operatorv1.OperatorStatusTypeAvailable))
+	return err
+}
+
+func removeConditionFn(cnd string) v1helpers.UpdateStatusFunc {
+	return func(oldStatus *operatorv1.OperatorStatus) error {
+		v1helpers.RemoveOperatorCondition(&oldStatus.Conditions, cnd)
+		return nil
+	}
 }
