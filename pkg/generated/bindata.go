@@ -156,6 +156,7 @@ spec:
             - --csi-address=$(ADDRESS)
             - --feature-gates=Topology=true
             - --v=${LOG_LEVEL}
+            - --timeout=120s
           env:
             - name: ADDRESS
               value: /var/lib/csi/sockets/pluginproxy/csi.sock
