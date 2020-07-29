@@ -20,7 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/kubernetes"
 	storagelisters "k8s.io/client-go/listers/storage/v1"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // This Controller watches OpenStack and:

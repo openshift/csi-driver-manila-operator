@@ -12,7 +12,7 @@ import (
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	operatorapi "github.com/openshift/api/operator/v1"
 	"github.com/openshift/library-go/pkg/controller/controllercmd"
