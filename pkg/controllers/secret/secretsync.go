@@ -3,6 +3,7 @@ package secret
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	operatorv1 "github.com/openshift/api/operator/v1"
@@ -40,6 +41,7 @@ func NewController(
 	operatorClient v1helpers.OperatorClient,
 	kubeClient kubernetes.Interface,
 	informers v1helpers.KubeInformersForNamespaces,
+	resync time.Duration,
 	eventRecorder events.Recorder) factory.Controller {
 
 	// Produce secrets in the operator namespace
@@ -50,7 +52,7 @@ func NewController(
 		secretLister:   secretInformer.Core().V1().Secrets().Lister(),
 		eventRecorder:  eventRecorder.WithComponentSuffix("SecretSync"),
 	}
-	return factory.New().WithSync(c.sync).WithSyncDegradedOnError(operatorClient).WithInformers(
+	return factory.New().WithSync(c.sync).ResyncEvery(resync).WithSyncDegradedOnError(operatorClient).WithInformers(
 		operatorClient.Informer(),
 		secretInformer.Core().V1().Secrets().Informer(),
 	).ToController("SecretSync", eventRecorder)

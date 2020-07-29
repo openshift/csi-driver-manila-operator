@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/openshift/csi-driver-manila-operator/pkg/controllers/manila"
 	"github.com/openshift/csi-driver-manila-operator/pkg/controllers/secret"
@@ -27,6 +28,8 @@ const (
 	operatorName = "manila-csi-driver-operator"
 
 	nfsImageEnvName = "NFS_DRIVER_IMAGE"
+
+	resync = 20 * time.Minute
 )
 
 func RunOperator(ctx context.Context, controllerConfig *controllercmd.ControllerContext) error {
@@ -95,6 +98,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		operatorClient,
 		kubeClient,
 		kubeInformersForNamespaces,
+		resync,
 		controllerConfig.EventRecorder)
 
 	manilaController := manila.NewController(
