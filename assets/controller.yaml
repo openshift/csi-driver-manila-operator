@@ -20,16 +20,14 @@ spec:
         - key: CriticalAddonsOnly
           operator: Exists
       containers:
-        # Warning: the operator expects the first container to be the CSI driver
         - name: csi-driver
-          securityContext:
-            privileged: true
-            capabilities:
-              add: ["SYS_ADMIN"]
-            allowPrivilegeEscalation: true
           image: ${DRIVER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
           args:
-            - --v=5
+            - --v=${LOG_LEVEL}
             - --nodeid=$(NODE_ID)
             - --endpoint=$(CSI_ENDPOINT)
             - --drivername=$(DRIVER_NAME)
@@ -60,6 +58,10 @@ spec:
         # TODO: fix manila CSI driver not to require NFS driver socket!
         - name: csi-driver-nfs
           image: ${NFS_DRIVER_IMAGE}
+          resources:
+            requests:
+              memory: 20Mi
+              cpu: 5m
           args:
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=unix://plugin/csi-nfs.sock"
@@ -77,16 +79,15 @@ spec:
               cpu: 10m
               memory: 50Mi
         - name: csi-provisioner
-          securityContext:
-            privileged: true
-            capabilities:
-              add: ["SYS_ADMIN"]
-            allowPrivilegeEscalation: true
           image: ${PROVISIONER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
           args:
             - --csi-address=$(ADDRESS)
             - --feature-gates=Topology=true
-            - --v=5
+            - --v=${LOG_LEVEL}
           env:
             - name: ADDRESS
               value: /var/lib/csi/sockets/pluginproxy/csi.sock
@@ -98,15 +99,14 @@ spec:
               cpu: 10m
               memory: 50Mi
         - name: csi-snapshotter
-          securityContext:
-            privileged: true
-            capabilities:
-              add: ["SYS_ADMIN"]
-            allowPrivilegeEscalation: true
           image: ${SNAPSHOTTER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
           args:
             - --csi-address=$(ADDRESS)
-            - --v=5
+            - --v=${LOG_LEVEL}
           env:
           - name: ADDRESS
             value: /var/lib/csi/sockets/pluginproxy/csi.sock

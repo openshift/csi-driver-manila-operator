@@ -3,8 +3,8 @@
 // assets/controller.yaml
 // assets/controller_sa.yaml
 // assets/csidriver.yaml
-// assets/node-nfs.yaml
 // assets/node.yaml
+// assets/node_nfs.yaml
 // assets/node_sa.yaml
 // assets/rbac/controller_privileged_binding.yaml
 // assets/rbac/node_privileged_binding.yaml
@@ -13,7 +13,6 @@
 // assets/rbac/provisioner_role.yaml
 // assets/rbac/snapshotter_binding.yaml
 // assets/rbac/snapshotter_role.yaml
-// assets/storageclass-base.yaml
 package generated
 
 import (
@@ -89,16 +88,14 @@ spec:
         - key: CriticalAddonsOnly
           operator: Exists
       containers:
-        # Warning: the operator expects the first container to be the CSI driver
         - name: csi-driver
-          securityContext:
-            privileged: true
-            capabilities:
-              add: ["SYS_ADMIN"]
-            allowPrivilegeEscalation: true
           image: ${DRIVER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
           args:
-            - --v=5
+            - --v=${LOG_LEVEL}
             - --nodeid=$(NODE_ID)
             - --endpoint=$(CSI_ENDPOINT)
             - --drivername=$(DRIVER_NAME)
@@ -129,6 +126,10 @@ spec:
         # TODO: fix manila CSI driver not to require NFS driver socket!
         - name: csi-driver-nfs
           image: ${NFS_DRIVER_IMAGE}
+          resources:
+            requests:
+              memory: 20Mi
+              cpu: 5m
           args:
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=unix://plugin/csi-nfs.sock"
@@ -146,16 +147,15 @@ spec:
               cpu: 10m
               memory: 50Mi
         - name: csi-provisioner
-          securityContext:
-            privileged: true
-            capabilities:
-              add: ["SYS_ADMIN"]
-            allowPrivilegeEscalation: true
           image: ${PROVISIONER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
           args:
             - --csi-address=$(ADDRESS)
             - --feature-gates=Topology=true
-            - --v=5
+            - --v=${LOG_LEVEL}
           env:
             - name: ADDRESS
               value: /var/lib/csi/sockets/pluginproxy/csi.sock
@@ -167,15 +167,14 @@ spec:
               cpu: 10m
               memory: 50Mi
         - name: csi-snapshotter
-          securityContext:
-            privileged: true
-            capabilities:
-              add: ["SYS_ADMIN"]
-            allowPrivilegeEscalation: true
           image: ${SNAPSHOTTER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
           args:
             - --csi-address=$(ADDRESS)
-            - --v=5
+            - --v=${LOG_LEVEL}
           env:
           - name: ADDRESS
             value: /var/lib/csi/sockets/pluginproxy/csi.sock
@@ -266,73 +265,6 @@ func csidriverYaml() (*asset, error) {
 	return a, nil
 }
 
-var _nodeNfsYaml = []byte(`kind: DaemonSet
-apiVersion: apps/v1
-metadata:
-  name: manila-csi-driver-node-nfs
-  namespace: openshift-cluster-csi-drivers
-spec:
-  selector:
-    matchLabels:
-      app: manila-csi-driver-node-nfs
-  template:
-    metadata:
-      labels:
-        app: manila-csi-driver-node-nfs
-    spec:
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
-      serviceAccount: manila-csi-driver-node-sa
-      priorityClassName: system-node-critical
-      tolerations:
-        - key: CriticalAddonsOnly
-          operator: Exists
-      containers:
-        - name: csi-driver
-          securityContext:
-            privileged: true
-          image: ${NFS_DRIVER_IMAGE}
-          args:
-            - "--nodeid=$(NODE_ID)"
-            - "--endpoint=unix://plugin/csi.sock"
-            - "--mount-permissions=0777"
-          env:
-            - name: NODE_ID
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-          volumeMounts:
-            - name: plugin-dir
-              mountPath: /plugin
-            - name: pods-mount-dir
-              mountPath: /var/lib/kubelet/pods
-              mountPropagation: Bidirectional
-      volumes:
-        - name: plugin-dir
-          hostPath:
-            path: /var/lib/kubelet/plugins/csi-nfsplugin
-            type: DirectoryOrCreate
-        - name: pods-mount-dir
-          hostPath:
-            path: /var/lib/kubelet/pods
-            type: DirectoryOrCreate
-`)
-
-func nodeNfsYamlBytes() ([]byte, error) {
-	return _nodeNfsYaml, nil
-}
-
-func nodeNfsYaml() (*asset, error) {
-	bytes, err := nodeNfsYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "node-nfs.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _nodeYaml = []byte(`kind: DaemonSet
 apiVersion: apps/v1
 metadata:
@@ -359,8 +291,12 @@ spec:
           securityContext:
             privileged: true
           image: ${DRIVER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
           args:
-            - --v=5
+            - --v=${LOG_LEVEL}
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--drivername=$(DRIVER_NAME)"
@@ -394,8 +330,12 @@ spec:
           securityContext:
             privileged: true
           image: ${NODE_DRIVER_REGISTRAR_IMAGE}
+          resources:
+            requests:
+              memory: 20Mi
+              cpu: 5m
           args:
-            - --v=5
+            - --v=${LOG_LEVEL}
             - --csi-address=/csi/csi.sock
             - --kubelet-registration-path=/var/lib/kubelet/plugins/manila.csi.openstack.org/csi.sock
           lifecycle:
@@ -453,6 +393,77 @@ func nodeYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "node.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _node_nfsYaml = []byte(`kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: manila-csi-driver-node-nfs
+  namespace: openshift-cluster-csi-drivers
+spec:
+  selector:
+    matchLabels:
+      app: manila-csi-driver-node-nfs
+  template:
+    metadata:
+      labels:
+        app: manila-csi-driver-node-nfs
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccount: manila-csi-driver-node-sa
+      priorityClassName: system-node-critical
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+      containers:
+        - name: csi-driver
+          securityContext:
+            privileged: true
+          image: ${NFS_DRIVER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
+          args:
+            - "--nodeid=$(NODE_ID)"
+            - "--endpoint=unix://plugin/csi.sock"
+            - "--mount-permissions=0777"
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /plugin
+            - name: pods-mount-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: Bidirectional
+      volumes:
+        - name: plugin-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/csi-nfsplugin
+            type: DirectoryOrCreate
+        - name: pods-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: DirectoryOrCreate
+`)
+
+func node_nfsYamlBytes() ([]byte, error) {
+	return _node_nfsYaml, nil
+}
+
+func node_nfsYaml() (*asset, error) {
+	bytes, err := node_nfsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "node_nfs.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -715,37 +726,6 @@ func rbacSnapshotter_roleYaml() (*asset, error) {
 	return a, nil
 }
 
-var _storageclassBaseYaml = []byte(`apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: csi-manila-SHARE_NAME
-parameters:
-  type: SHARE_NAME
-  csi.storage.k8s.io/provisioner-secret-name:       manila-driver-credentials
-  csi.storage.k8s.io/provisioner-secret-namespace:  openshift-cluster-csi-drivers
-  csi.storage.k8s.io/node-stage-secret-name:        manila-driver-credentials
-  csi.storage.k8s.io/node-stage-secret-namespace:   openshift-cluster-csi-drivers
-  csi.storage.k8s.io/node-publish-secret-name:      manila-driver-credentials
-  csi.storage.k8s.io/node-publish-secret-namespace: openshift-cluster-csi-drivers
-provisioner: manila.csi.openstack.org
-reclaimPolicy: "Delete"
-`)
-
-func storageclassBaseYamlBytes() ([]byte, error) {
-	return _storageclassBaseYaml, nil
-}
-
-func storageclassBaseYaml() (*asset, error) {
-	bytes, err := storageclassBaseYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "storageclass-base.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -801,8 +781,8 @@ var _bindata = map[string]func() (*asset, error){
 	"controller.yaml":    controllerYaml,
 	"controller_sa.yaml": controller_saYaml,
 	"csidriver.yaml":     csidriverYaml,
-	"node-nfs.yaml":      nodeNfsYaml,
 	"node.yaml":          nodeYaml,
+	"node_nfs.yaml":      node_nfsYaml,
 	"node_sa.yaml":       node_saYaml,
 	"rbac/controller_privileged_binding.yaml": rbacController_privileged_bindingYaml,
 	"rbac/node_privileged_binding.yaml":       rbacNode_privileged_bindingYaml,
@@ -811,7 +791,6 @@ var _bindata = map[string]func() (*asset, error){
 	"rbac/provisioner_role.yaml":              rbacProvisioner_roleYaml,
 	"rbac/snapshotter_binding.yaml":           rbacSnapshotter_bindingYaml,
 	"rbac/snapshotter_role.yaml":              rbacSnapshotter_roleYaml,
-	"storageclass-base.yaml":                  storageclassBaseYaml,
 }
 
 // AssetDir returns the file names below a certain
@@ -858,8 +837,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"controller.yaml":    {controllerYaml, map[string]*bintree{}},
 	"controller_sa.yaml": {controller_saYaml, map[string]*bintree{}},
 	"csidriver.yaml":     {csidriverYaml, map[string]*bintree{}},
-	"node-nfs.yaml":      {nodeNfsYaml, map[string]*bintree{}},
 	"node.yaml":          {nodeYaml, map[string]*bintree{}},
+	"node_nfs.yaml":      {node_nfsYaml, map[string]*bintree{}},
 	"node_sa.yaml":       {node_saYaml, map[string]*bintree{}},
 	"rbac": {nil, map[string]*bintree{
 		"controller_privileged_binding.yaml": {rbacController_privileged_bindingYaml, map[string]*bintree{}},
@@ -870,7 +849,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"snapshotter_binding.yaml":           {rbacSnapshotter_bindingYaml, map[string]*bintree{}},
 		"snapshotter_role.yaml":              {rbacSnapshotter_roleYaml, map[string]*bintree{}},
 	}},
-	"storageclass-base.yaml": {storageclassBaseYaml, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory

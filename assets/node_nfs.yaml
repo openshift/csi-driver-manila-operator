@@ -24,6 +24,10 @@ spec:
           securityContext:
             privileged: true
           image: ${NFS_DRIVER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
           args:
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=unix://plugin/csi.sock"

@@ -83,7 +83,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		assetWithNFSDriver,
 		kubeClient,
 		controllerConfig.EventRecorder,
-	).WithNodeService(kubeInformersForNamespaces.InformersFor(util.OperatorNamespace).Apps().V1().DaemonSets(), "node-nfs.yaml")
+	).WithNodeService(kubeInformersForNamespaces.InformersFor(util.OperatorNamespace).Apps().V1().DaemonSets(), "node_nfs.yaml")
 
 	openstackClient, err := manila.NewOpenStackClient(util.CloudConfigFilename, kubeInformersForNamespaces)
 	if err != nil {

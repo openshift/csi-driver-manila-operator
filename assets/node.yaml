@@ -24,8 +24,12 @@ spec:
           securityContext:
             privileged: true
           image: ${DRIVER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
           args:
-            - --v=5
+            - --v=${LOG_LEVEL}
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--drivername=$(DRIVER_NAME)"
@@ -59,8 +63,12 @@ spec:
           securityContext:
             privileged: true
           image: ${NODE_DRIVER_REGISTRAR_IMAGE}
+          resources:
+            requests:
+              memory: 20Mi
+              cpu: 5m
           args:
-            - --v=5
+            - --v=${LOG_LEVEL}
             - --csi-address=/csi/csi.sock
             - --kubelet-registration-path=/var/lib/kubelet/plugins/manila.csi.openstack.org/csi.sock
           lifecycle:
