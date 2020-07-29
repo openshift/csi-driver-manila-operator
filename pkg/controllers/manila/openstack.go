@@ -1,8 +1,12 @@
 package manila
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"os"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -50,6 +54,27 @@ func (o *openStackClient) GetShareTypes() ([]sharetypes.ShareType, error) {
 		return nil, err
 	}
 
+	cert, err := getCloudProviderCert()
+	if err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("failed to get cloud provider CA certificate: %v", err)
+	}
+
+	if len(cert) > 0 {
+		certPool, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, fmt.Errorf("create system cert pool failed: %v", err)
+		}
+		certPool.AppendCertsFromPEM(cert)
+		client := http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: certPool,
+				},
+			},
+		}
+		provider.HTTPClient = client
+	}
+
 	err = openstack.Authenticate(provider, *opts)
 	if err != nil {
 		return nil, err
@@ -86,4 +111,8 @@ func getCloudFromFile(filename string) (*clientconfig.Cloud, error) {
 		return nil, fmt.Errorf("could not find cloud named %q in credential file %s", util.CloudName, filename)
 	}
 	return &cfg, nil
+}
+
+func getCloudProviderCert() ([]byte, error) {
+	return ioutil.ReadFile(util.CertFile)
 }
