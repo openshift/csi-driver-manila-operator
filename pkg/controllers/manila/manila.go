@@ -136,10 +136,7 @@ func (c *Controller) syncStorageClasses(ctx context.Context, shareTypes []sharet
 			errs = append(errs, err)
 		}
 	}
-	if len(errs) != 0 {
-		return errors.NewAggregate(errs)
-	}
-	return nil
+	return errors.NewAggregate(errs)
 }
 
 func (c *Controller) applyStorageClass(ctx context.Context, expected *storagev1.StorageClass) error {
