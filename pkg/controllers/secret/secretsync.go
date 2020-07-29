@@ -48,7 +48,7 @@ func NewController(
 		operatorClient: operatorClient,
 		kubeClient:     kubeClient,
 		secretLister:   secretInformer.Core().V1().Secrets().Lister(),
-		eventRecorder:  eventRecorder,
+		eventRecorder:  eventRecorder.WithComponentSuffix("SecretSync"),
 	}
 	return factory.New().WithSync(c.sync).WithSyncDegradedOnError(operatorClient).WithInformers(
 		operatorClient.Informer(),

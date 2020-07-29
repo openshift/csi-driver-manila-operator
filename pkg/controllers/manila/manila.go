@@ -75,7 +75,7 @@ func NewController(
 		storageClassLister: scInformer.Lister(),
 		openStackClient:    openStackClient,
 		csiControllers:     csiControllers,
-		eventRecorder:      eventRecorder,
+		eventRecorder:      eventRecorder.WithComponentSuffix("ManilaController"),
 	}
 	return factory.New().WithSync(c.sync).WithSyncDegradedOnError(operatorClient).ResyncEvery(resyncInterval).WithInformers(
 		operatorClient.Informer(),
