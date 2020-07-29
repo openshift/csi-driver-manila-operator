@@ -49,6 +49,10 @@ spec:
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
+      resources:
+        requests:
+          cpu: 10m
+          memory: 20Mi
     volumes:
       - name: cacert
         # Extract ca-bundle.pem to /usr/share/pki/ca-trust-source if present.

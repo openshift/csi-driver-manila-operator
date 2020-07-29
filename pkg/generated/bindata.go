@@ -122,6 +122,10 @@ spec:
               mountPath: /plugin
             - name: cacert
               mountPath: /usr/share/pki/ca-trust-source
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
         # TODO: fix manila CSI driver not to require NFS driver socket!
         - name: csi-driver-nfs
           image: ${NFS_DRIVER_IMAGE}
@@ -137,6 +141,10 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /plugin
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
         - name: csi-provisioner
           securityContext:
             privileged: true
@@ -154,6 +162,10 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
         - name: csi-snapshotter
           securityContext:
             privileged: true
@@ -170,6 +182,10 @@ spec:
           volumeMounts:
           - mountPath: /var/lib/csi/sockets/pluginproxy/
             name: socket-dir
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
       volumes:
         - name: socket-dir
           emptyDir: {}
@@ -370,6 +386,10 @@ spec:
               mountPath: /var/lib/kubelet/plugins/csi-nfsplugin
             - name: cacert
               mountPath: /usr/share/pki/ca-trust-source
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
         - name: csi-node-driver-registrar
           securityContext:
             privileged: true
@@ -392,6 +412,10 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
+          resources:
+            requests:
+              cpu: 5m
+              memory: 20Mi
       volumes:
         - name: registration-dir
           hostPath:
