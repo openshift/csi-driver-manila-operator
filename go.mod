@@ -17,7 +17,6 @@ require (
 	k8s.io/api v0.19.0-rc.2
 	k8s.io/apimachinery v0.19.0-rc.2
 	k8s.io/client-go v0.19.0-rc.2
-	k8s.io/code-generator v0.19.0-rc.2
 	k8s.io/component-base v0.19.0-rc.2
 	k8s.io/klog/v2 v2.3.0
 	sigs.k8s.io/yaml v1.2.0
