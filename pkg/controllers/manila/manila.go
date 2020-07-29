@@ -100,7 +100,7 @@ func (c *Controller) sync(ctx context.Context, syncCtx factory.SyncContext) erro
 		switch err.(type) {
 		case *gophercloud.ErrEndpointNotFound:
 			// OpenStack does not support manila, report the operator as disabled
-			return c.setDisabled("This OpenStack does not provide Manila service")
+			return c.setDisabled("This OpenStack cluster does not provide Manila service")
 		default:
 			return err
 		}

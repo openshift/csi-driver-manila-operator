@@ -90,13 +90,13 @@ func (c *Controller) sync(ctx context.Context, syncCtx factory.SyncContext) erro
 func (c *Controller) translateSecret(cloudSecret *v1.Secret) (*v1.Secret, error) {
 	content, ok := cloudSecret.Data[cloudSecretKey]
 	if !ok {
-		return nil, fmt.Errorf("OpenStack credentials secret %s did not contain key %v", util.CloudCredentialSecretName, cloudSecretKey)
+		return nil, fmt.Errorf("OpenStack credentials secret %s did not contain key %s", util.CloudCredentialSecretName, cloudSecretKey)
 	}
 
 	var clouds clientconfig.Clouds
 	err := yaml.Unmarshal(content, &clouds)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal clouds credentials stored in secret %s: %v", util.CloudCredentialSecretName, err)
+		return nil, fmt.Errorf("failed to unmarshal clouds credentials stored in secret %s: %s", util.CloudCredentialSecretName, err)
 	}
 
 	cloud, ok := clouds.Clouds[cloudName]
