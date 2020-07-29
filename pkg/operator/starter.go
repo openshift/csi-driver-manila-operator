@@ -23,13 +23,14 @@ import (
 )
 
 const (
-	operandName = "manila-csi-driver"
+	operandName  = "manila-csi-driver"
+	operatorName = "manila-csi-driver-operator"
 
 	nfsImageEnvName = "NFS_DRIVER_IMAGE"
 )
 
 func RunOperator(ctx context.Context, controllerConfig *controllercmd.ControllerContext) error {
-	kubeClient := kubeclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, "kube-client"))
+	kubeClient := kubeclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
 	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperatorNamespace, "")
 
 	// Create GenericOperatorclient. This is used by controllers created down below
