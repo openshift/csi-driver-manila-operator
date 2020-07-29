@@ -90,6 +90,13 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 	if err != nil {
 		return err
 	}
+
+	secretSyncController := secret.NewController(
+		operatorClient,
+		kubeClient,
+		kubeInformersForNamespaces,
+		controllerConfig.EventRecorder)
+
 	manilaController := manila.NewController(
 		operatorClient,
 		kubeClient,
@@ -98,14 +105,10 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		[]manila.Runnable{
 			manilaControllerSet,
 			nfsController,
+			secretSyncController,
 		},
 		controllerConfig.EventRecorder,
 	)
-	secretSyncController := secret.NewController(
-		operatorClient,
-		kubeClient,
-		kubeInformersForNamespaces,
-		controllerConfig.EventRecorder)
 
 	klog.Info("Starting the informers")
 	go kubeInformersForNamespaces.Start(ctx.Done())
@@ -113,7 +116,6 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 
 	klog.Info("Starting controllers")
 	go manilaController.Run(ctx, 1)
-	go secretSyncController.Run(ctx, 1)
 
 	<-ctx.Done()
 
