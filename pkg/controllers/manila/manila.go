@@ -147,10 +147,10 @@ func (c *ManilaController) applyStorageClass(ctx context.Context, expected *stor
 			// is different when moving from OLM to non-OLM operator.
 			// Delete the old class and create a new one.
 			if err := c.kubeClient.StorageV1().StorageClasses().Delete(ctx, expected.Name, metav1.DeleteOptions{}); err != nil {
-				if apierrors.IsNotFound(err) {
-					err = nil
+				if !apierrors.IsNotFound(err) {
+					return err
 				}
-				return err
+				// Fall through to ApplyStorageClass below on IsNotFound error to create a new SC.
 			}
 			// Merge existing and expected ObjectMeta (esp. default storage class)
 			var modified bool
