@@ -100,7 +100,7 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 		switch err.(type) {
 		case *gophercloud.ErrEndpointNotFound:
 			// OpenStack does not support manila, report the operator as disabled
-			return c.setDisabled("This OpenStack cluster does not provide Manila service")
+			return c.setDisabledCondition("This OpenStack cluster does not provide Manila service")
 		default:
 			return err
 		}
@@ -108,7 +108,7 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 
 	if len(shareTypes) == 0 {
 		klog.V(4).Infof("Manila does not provide any share types")
-		return c.setDisabled("Manila does not provide any share types")
+		return c.setDisabledCondition("Manila does not provide any share types")
 	}
 	// Manila has some shares: start the actual CSI driver controller sets
 	if !c.controllersRunning {
@@ -123,7 +123,7 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 		return err
 	}
 
-	return c.setEnabled()
+	return c.setEnabledCondition()
 }
 
 func (c *ManilaController) syncStorageClasses(ctx context.Context, shareTypes []sharetypes.ShareType) error {
@@ -184,7 +184,7 @@ func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) 
 	return sc
 }
 
-func (c *ManilaController) setEnabled() error {
+func (c *ManilaController) setEnabledCondition() error {
 	availableCnd := operatorv1.OperatorCondition{
 		Type:   operatorConditionPrefix + operatorv1.OperatorStatusTypeAvailable,
 		Status: operatorv1.ConditionTrue,
@@ -195,7 +195,7 @@ func (c *ManilaController) setEnabled() error {
 	return err
 }
 
-func (c *ManilaController) setDisabled(msg string) error {
+func (c *ManilaController) setDisabledCondition(msg string) error {
 	disabledCnd := operatorv1.OperatorCondition{
 		Type:    operatorConditionPrefix + "Disabled",
 		Status:  operatorv1.ConditionTrue,

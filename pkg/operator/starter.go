@@ -43,7 +43,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		return err
 	}
 
-	manilaControllerSet := csicontrollerset.NewCSIControllerSet(
+	csiDriverControllerSet := csicontrollerset.NewCSIControllerSet(
 		operatorClient,
 		controllerConfig.EventRecorder,
 	).WithLogLevelController().WithManagementStateController(
@@ -78,7 +78,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		csicontrollerset.WithNodeService("node.yaml"),
 	)
 
-	nfsController := csidrivercontroller.NewCSIDriverController(
+	nfsCSIDriverController := csidrivercontroller.NewCSIDriverController(
 		"NFSDriverController",
 		string(operatorapi.ManilaCSIDriver),
 		"nfs-csi-driver",
@@ -107,8 +107,8 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeInformersForNamespaces,
 		openstackClient,
 		[]manila.Runnable{
-			manilaControllerSet,
-			nfsController,
+			csiDriverControllerSet,
+			nfsCSIDriverController,
 			secretSyncController,
 		},
 		controllerConfig.EventRecorder,
