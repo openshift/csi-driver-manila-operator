@@ -55,7 +55,7 @@ const (
 	// Minimal interval between controller resyncs. The controller will detect
 	// new share types in Manila and create StorageClasses for them at least
 	// once per this interval.
-	resyncInterval = 1 * time.Minute
+	resyncInterval = 20 * time.Minute
 
 	operatorConditionPrefix = "ManilaController"
 )
