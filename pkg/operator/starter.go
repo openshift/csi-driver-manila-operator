@@ -11,6 +11,7 @@ import (
 	"github.com/openshift/csi-driver-manila-operator/pkg/controllers/secret"
 	"github.com/openshift/csi-driver-manila-operator/pkg/generated"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
+	"github.com/openshift/library-go/pkg/controller/factory"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
@@ -68,7 +69,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		},
 	).WithCSIDriverController(
 		"ManilaDriverController",
-		string(operatorapi.ManilaCSIDriver),
+		factory.DefaultQueueKey,
 		operandName,
 		util.OperatorNamespace,
 		assetWithNFSDriver,
@@ -80,9 +81,9 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 
 	nfsCSIDriverController := csidrivercontroller.NewCSIDriverController(
 		"NFSDriverController",
-		string(operatorapi.ManilaCSIDriver),
 		"nfs-csi-driver",
 		util.OperatorNamespace,
+		string(operatorapi.ManilaCSIDriver),
 		operatorClient,
 		assetWithNFSDriver,
 		kubeClient,
