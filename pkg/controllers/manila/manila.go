@@ -23,7 +23,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// This Controller watches OpenStack and:
+// This ManilaController watches OpenStack and:
 // 1) Installs Manila CSI drivers (Manila itself, NFS) once
 //    it detects that there is Manlina present (by running provided
 //    manilaOperatorSet).
@@ -36,7 +36,7 @@ import (
 // under (short?) maintenance / reconfiguration.
 // Similarly, StorageClasses are not deleted when a share type disappears
 // from Manila.
-type Controller struct {
+type ManilaController struct {
 	operatorClient     v1helpers.OperatorClient
 	kubeClient         kubernetes.Interface
 	openStackClient    *openStackClient
@@ -60,7 +60,7 @@ const (
 	operatorConditionPrefix = "ManilaController"
 )
 
-func NewController(
+func NewManilaController(
 	operatorClient v1helpers.OperatorClient,
 	kubeClient kubernetes.Interface,
 	informers v1helpers.KubeInformersForNamespaces,
@@ -69,7 +69,7 @@ func NewController(
 	eventRecorder events.Recorder) factory.Controller {
 
 	scInformer := informers.InformersFor("").Storage().V1().StorageClasses()
-	c := &Controller{
+	c := &ManilaController{
 		operatorClient:     operatorClient,
 		kubeClient:         kubeClient,
 		storageClassLister: scInformer.Lister(),
@@ -83,7 +83,7 @@ func NewController(
 	).ToController("ManilaController", eventRecorder)
 }
 
-func (c *Controller) sync(ctx context.Context, syncCtx factory.SyncContext) error {
+func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext) error {
 	klog.V(4).Infof("Manila sync started")
 	defer klog.V(4).Infof("Manila sync finished")
 
@@ -126,7 +126,7 @@ func (c *Controller) sync(ctx context.Context, syncCtx factory.SyncContext) erro
 	return c.setEnabled()
 }
 
-func (c *Controller) syncStorageClasses(ctx context.Context, shareTypes []sharetypes.ShareType) error {
+func (c *ManilaController) syncStorageClasses(ctx context.Context, shareTypes []sharetypes.ShareType) error {
 	var errs []error
 	for _, shareType := range shareTypes {
 		klog.V(4).Infof("Syncing storage class for shareType type %s", shareType.Name)
@@ -139,7 +139,7 @@ func (c *Controller) syncStorageClasses(ctx context.Context, shareTypes []sharet
 	return errors.NewAggregate(errs)
 }
 
-func (c *Controller) applyStorageClass(ctx context.Context, expected *storagev1.StorageClass) error {
+func (c *ManilaController) applyStorageClass(ctx context.Context, expected *storagev1.StorageClass) error {
 	current, err := c.storageClassLister.Get(expected.Name)
 	if err == nil {
 		if !reflect.DeepEqual(expected.Parameters, current.Parameters) {
@@ -164,7 +164,7 @@ func (c *Controller) applyStorageClass(ctx context.Context, expected *storagev1.
 	return err
 }
 
-func (c *Controller) generateStorageClass(shareType sharetypes.ShareType) *storagev1.StorageClass {
+func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) *storagev1.StorageClass {
 	storageClassName := util.StorageClassNamePrefix + shareType.Name
 	sc := &storagev1.StorageClass{
 		ObjectMeta: metav1.ObjectMeta{
@@ -184,7 +184,7 @@ func (c *Controller) generateStorageClass(shareType sharetypes.ShareType) *stora
 	return sc
 }
 
-func (c *Controller) setEnabled() error {
+func (c *ManilaController) setEnabled() error {
 	availableCnd := operatorv1.OperatorCondition{
 		Type:   operatorConditionPrefix + operatorv1.OperatorStatusTypeAvailable,
 		Status: operatorv1.ConditionTrue,
@@ -195,7 +195,7 @@ func (c *Controller) setEnabled() error {
 	return err
 }
 
-func (c *Controller) setDisabled(msg string) error {
+func (c *ManilaController) setDisabled(msg string) error {
 	disabledCnd := operatorv1.OperatorCondition{
 		Type:    operatorConditionPrefix + "Disabled",
 		Status:  operatorv1.ConditionTrue,

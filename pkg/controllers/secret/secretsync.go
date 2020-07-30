@@ -21,9 +21,9 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// This Controller translates Secret provided by cloud-credential-operator into
+// This SecretSyncController translates Secret provided by cloud-credential-operator into
 // format required by the CSI driver.
-type Controller struct {
+type SecretSyncController struct {
 	operatorClient v1helpers.OperatorClient
 	kubeClient     kubernetes.Interface
 	secretLister   corelisters.SecretLister
@@ -37,7 +37,7 @@ const (
 	cloudName = "openstack"
 )
 
-func NewController(
+func NewSecretSyncController(
 	operatorClient v1helpers.OperatorClient,
 	kubeClient kubernetes.Interface,
 	informers v1helpers.KubeInformersForNamespaces,
@@ -46,7 +46,7 @@ func NewController(
 
 	// Produce secrets in the operator namespace
 	secretInformer := informers.InformersFor(util.OperatorNamespace)
-	c := &Controller{
+	c := &SecretSyncController{
 		operatorClient: operatorClient,
 		kubeClient:     kubeClient,
 		secretLister:   secretInformer.Core().V1().Secrets().Lister(),
@@ -58,7 +58,7 @@ func NewController(
 	).ToController("SecretSync", eventRecorder)
 }
 
-func (c *Controller) sync(ctx context.Context, syncCtx factory.SyncContext) error {
+func (c *SecretSyncController) sync(ctx context.Context, syncCtx factory.SyncContext) error {
 	opSpec, _, _, err := c.operatorClient.GetOperatorState()
 	if err != nil {
 		return err
@@ -89,7 +89,7 @@ func (c *Controller) sync(ctx context.Context, syncCtx factory.SyncContext) erro
 	return nil
 }
 
-func (c *Controller) translateSecret(cloudSecret *v1.Secret) (*v1.Secret, error) {
+func (c *SecretSyncController) translateSecret(cloudSecret *v1.Secret) (*v1.Secret, error) {
 	content, ok := cloudSecret.Data[cloudSecretKey]
 	if !ok {
 		return nil, fmt.Errorf("OpenStack credentials secret %s did not contain key %s", util.CloudCredentialSecretName, cloudSecretKey)

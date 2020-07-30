@@ -94,14 +94,14 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		return err
 	}
 
-	secretSyncController := secret.NewController(
+	secretSyncController := secret.NewSecretSyncController(
 		operatorClient,
 		kubeClient,
 		kubeInformersForNamespaces,
 		resync,
 		controllerConfig.EventRecorder)
 
-	manilaController := manila.NewController(
+	manilaController := manila.NewManilaController(
 		operatorClient,
 		kubeClient,
 		kubeInformersForNamespaces,
