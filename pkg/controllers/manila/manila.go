@@ -14,6 +14,7 @@ import (
 	"github.com/openshift/library-go/pkg/operator/resource/resourceapply"
 	"github.com/openshift/library-go/pkg/operator/resource/resourcemerge"
 	"github.com/openshift/library-go/pkg/operator/v1helpers"
+	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -166,6 +167,8 @@ func (c *ManilaController) applyStorageClass(ctx context.Context, expected *stor
 
 func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) *storagev1.StorageClass {
 	storageClassName := util.StorageClassNamePrefix + shareType.Name
+	delete := corev1.PersistentVolumeReclaimDelete
+	waitForFirstConsumer := storagev1.VolumeBindingWaitForFirstConsumer
 	sc := &storagev1.StorageClass{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: storageClassName,
@@ -180,6 +183,8 @@ func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) 
 			"csi.storage.k8s.io/node-publish-secret-name":      util.ManilaSecretName,
 			"csi.storage.k8s.io/node-publish-secret-namespace": util.OperatorNamespace,
 		},
+		ReclaimPolicy:     &delete,
+		VolumeBindingMode: &waitForFirstConsumer,
 	}
 	return sc
 }
