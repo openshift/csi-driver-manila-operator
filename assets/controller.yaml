@@ -1,0 +1,134 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: manila-csi-driver-controller
+  namespace: openshift-cluster-csi-drivers
+spec:
+  selector:
+    matchLabels:
+      app: manila-csi-driver-controller
+  serviceName: manila-csi-driver-controller
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: manila-csi-driver-controller
+    spec:
+      serviceAccount: manila-csi-driver-controller-sa
+      priorityClassName: system-cluster-critical
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+      containers:
+        - name: csi-driver
+          image: ${DRIVER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
+          args:
+            - --v=${LOG_LEVEL}
+            - --nodeid=$(NODE_ID)
+            - --endpoint=$(CSI_ENDPOINT)
+            - --drivername=$(DRIVER_NAME)
+            - --share-protocol-selector=$(MANILA_SHARE_PROTO)
+            - --fwdendpoint=$(FWD_CSI_ENDPOINT)
+          env:
+            - name: DRIVER_NAME
+              value: manila.csi.openstack.org
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CSI_ENDPOINT
+              value: unix:///plugin/csi.sock
+            - name: MANILA_SHARE_PROTO
+              value: NFS
+            - name: FWD_CSI_ENDPOINT
+              value: unix:///plugin/csi-nfs.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /plugin
+            - name: cacert
+              mountPath: /usr/share/pki/ca-trust-source
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
+        # TODO: fix manila CSI driver not to require NFS driver socket!
+        - name: csi-driver-nfs
+          image: ${NFS_DRIVER_IMAGE}
+          resources:
+            requests:
+              memory: 20Mi
+              cpu: 5m
+          args:
+            - "--nodeid=$(NODE_ID)"
+            - "--endpoint=unix://plugin/csi-nfs.sock"
+            - "--mount-permissions=0777"
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /plugin
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
+        - name: csi-provisioner
+          image: ${PROVISIONER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
+          args:
+            - --csi-address=$(ADDRESS)
+            - --feature-gates=Topology=true
+            - --v=${LOG_LEVEL}
+            - --timeout=120s
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
+        - name: csi-snapshotter
+          image: ${SNAPSHOTTER_IMAGE}
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
+          args:
+            - --csi-address=$(ADDRESS)
+            - --v=${LOG_LEVEL}
+          env:
+          - name: ADDRESS
+            value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          volumeMounts:
+          - mountPath: /var/lib/csi/sockets/pluginproxy/
+            name: socket-dir
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
+      volumes:
+        - name: socket-dir
+          emptyDir: {}
+        - name: cacert
+          # Extract ca-bundle.pem to /usr/share/pki/ca-trust-source if present.
+          # Let the pod start when the ConfigMap does not exist or the certificate
+          # is not preset there. The certificate file will be created once the
+          # ConfigMap is created / the cerificate is added to it.
+          configMap:
+            name: cloud-provider-config
+            items:
+            - key: ca-bundle.pem
+              path: ca-bundle.pem
+            optional: true

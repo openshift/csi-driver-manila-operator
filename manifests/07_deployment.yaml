@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manila-csi-driver-operator
+  namespace: openshift-cluster-csi-drivers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: manila-csi-driver-operator
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        name: manila-csi-driver-operator
+    spec:
+      containers:
+      - args:
+        - start
+        env:
+        - name: DRIVER_IMAGE
+          value: quay.io/openshift/origin-csi-driver-manila:latest
+        - name: NFS_DRIVER_IMAGE
+          value: quay.io/openshift/origin-csi-driver-nfs:latest
+        - name: PROVISIONER_IMAGE
+          value: quay.io/openshift/origin-csi-external-provisioner:latest
+        - name: ATTACHER_IMAGE
+          value: quay.io/openshift/origin-csi-external-attacher:latest
+        - name: RESIZER_IMAGE
+          value: quay.io/openshift/origin-csi-external-resizer:latest
+        - name: SNAPSHOTTER_IMAGE
+          value: quay.io/openshift/origin-csi-external-snapshotter:latest
+        - name: NODE_DRIVER_REGISTRAR_IMAGE
+          value: quay.io/openshift/origin-csi-node-driver-registrar:latest
+        - name: LIVENESS_PROBE_IMAGE
+          value: quay.io/openshift/origin-csi-livenessprobe:latest
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: quay.io/openshift/origin-csi-driver-manila-operator:latest
+        imagePullPolicy: IfNotPresent
+        name: manila-csi-driver-operator
+        volumeMounts:
+        - name: cacert
+          mountPath: /usr/share/pki/ca-trust-source
+      priorityClassName: system-cluster-critical
+      serviceAccountName: manila-csi-driver-operator
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      resources:
+        requests:
+          cpu: 10m
+          memory: 20Mi
+    volumes:
+      - name: cacert
+        # Extract ca-bundle.pem to /usr/share/pki/ca-trust-source if present.
+        # Let the pod start when the ConfigMap does not exist or the certificate
+        # is not preset there. The certificate file will be created once the
+        # ConfigMap is created / the cerificate is added to it.
+        configMap:
+          name: cloud-provider-config
+          items:
+            - key: ca-bundle.pem
+              path: ca-bundle.pem
+          optional: true
