@@ -12,6 +12,7 @@ import (
 	"github.com/openshift/csi-driver-manila-operator/pkg/generated"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
 	"github.com/openshift/library-go/pkg/controller/factory"
+	"github.com/openshift/library-go/pkg/operator/resourcesynccontroller"
 	"k8s.io/client-go/dynamic"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -102,6 +103,24 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		controllerConfig.EventRecorder,
 	).WithNodeService(kubeInformersForNamespaces.InformersFor(util.OperandNamespace).Apps().V1().DaemonSets(), "node_nfs.yaml")
 
+	// sync config map with OpenStack CA certificate to the operand namespace,
+	// so the driver can get it as a ConfigMap volume.
+	srcConfigMap := resourcesynccontroller.ResourceLocation{
+		Namespace: util.CloudConfigNamespace,
+		Name:      util.CloudConfigName,
+	}
+	dstConfigMap := resourcesynccontroller.ResourceLocation{
+		Namespace: util.OperandNamespace,
+		Name:      util.CloudConfigName,
+	}
+	certController := resourcesynccontroller.NewResourceSyncController(
+		operatorClient,
+		kubeInformersForNamespaces,
+		kubeClient.CoreV1(),
+		kubeClient.CoreV1(),
+		controllerConfig.EventRecorder)
+	certController.SyncConfigMap(dstConfigMap, srcConfigMap)
+
 	openstackClient, err := manila.NewOpenStackClient(util.CloudConfigFilename, kubeInformersForNamespaces)
 	if err != nil {
 		return err
@@ -123,6 +142,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			csiDriverControllerSet,
 			nfsCSIDriverController,
 			secretSyncController,
+			certController,
 		},
 		controllerConfig.EventRecorder,
 	)

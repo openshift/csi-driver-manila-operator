@@ -5,6 +5,9 @@ const (
 	CloudCredentialSecretName = "manila-cloud-credentials"
 	ManilaSecretName          = "manila-driver-credentials"
 
+	CloudConfigNamespace = "openshift-config"
+	CloudConfigName      = "cloud-provider-config"
+
 	StorageClassNamePrefix = "csi-manila-"
 
 	// OpenStack config file name (as present in the operator Deployment)
