@@ -145,7 +145,7 @@ func (c *ManilaController) applyStorageClass(ctx context.Context, expected *stor
 func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) *storagev1.StorageClass {
 	storageClassName := util.StorageClassNamePrefix + shareType.Name
 	delete := corev1.PersistentVolumeReclaimDelete
-	waitForFirstConsumer := storagev1.VolumeBindingWaitForFirstConsumer
+	immediate := storagev1.VolumeBindingImmediate
 	sc := &storagev1.StorageClass{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: storageClassName,
@@ -161,7 +161,7 @@ func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) 
 			"csi.storage.k8s.io/node-publish-secret-namespace": util.OperandNamespace,
 		},
 		ReclaimPolicy:     &delete,
-		VolumeBindingMode: &waitForFirstConsumer,
+		VolumeBindingMode: &immediate,
 	}
 	return sc
 }
