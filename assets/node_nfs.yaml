@@ -1,16 +1,18 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: manila-csi-driver-node-nfs
-  namespace: openshift-cluster-csi-drivers
+  name: csi-nodeplugin-nfsplugin
+  namespace: openshift-manila-csi-driver
 spec:
   selector:
     matchLabels:
-      app: manila-csi-driver-node-nfs
+      app: openstack-manila-csi
+      component: nfs-nodeplugin
   template:
     metadata:
       labels:
-        app: manila-csi-driver-node-nfs
+        app: openstack-manila-csi
+        component: nfs-nodeplugin
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet

@@ -44,8 +44,8 @@ func NewSecretSyncController(
 	resync time.Duration,
 	eventRecorder events.Recorder) factory.Controller {
 
-	// Produce secrets in the operator namespace
-	secretInformer := informers.InformersFor(util.OperatorNamespace)
+	// Produce secrets in the operand namespace
+	secretInformer := informers.InformersFor(util.OperandNamespace)
 	c := &SecretSyncController{
 		operatorClient: operatorClient,
 		kubeClient:     kubeClient,
@@ -67,7 +67,7 @@ func (c *SecretSyncController) sync(ctx context.Context, syncCtx factory.SyncCon
 		return nil
 	}
 
-	cloudSecret, err := c.secretLister.Secrets(util.OperatorNamespace).Get(util.CloudCredentialSecretName)
+	cloudSecret, err := c.secretLister.Secrets(util.OperandNamespace).Get(util.CloudCredentialSecretName)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// TODO: report error after some while?
@@ -151,7 +151,7 @@ func (c *SecretSyncController) translateSecret(cloudSecret *v1.Secret) (*v1.Secr
 	secret := v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      util.ManilaSecretName,
-			Namespace: util.OperatorNamespace,
+			Namespace: util.OperandNamespace,
 		},
 		Type: v1.SecretTypeOpaque,
 		Data: data,

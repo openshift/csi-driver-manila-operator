@@ -1,9 +1,12 @@
 package util
 
 const (
-	OperatorNamespace         = "openshift-cluster-csi-drivers"
+	OperandNamespace          = "openshift-manila-csi-driver"
 	CloudCredentialSecretName = "manila-cloud-credentials"
-	ManilaSecretName          = "manila-driver-credentials"
+	ManilaSecretName          = "csi-manila-secrets"
+
+	CloudConfigNamespace = "openshift-config"
+	CloudConfigName      = "cloud-provider-config"
 
 	StorageClassNamePrefix = "csi-manila-"
 
