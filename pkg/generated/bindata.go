@@ -2,7 +2,9 @@
 // sources:
 // assets/controller.yaml
 // assets/controller_sa.yaml
+// assets/credentials.yaml
 // assets/csidriver.yaml
+// assets/namespace.yaml
 // assets/node.yaml
 // assets/node_nfs.yaml
 // assets/node_sa.yaml
@@ -70,7 +72,7 @@ var _controllerYaml = []byte(`kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: manila-csi-driver-controller
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 spec:
   selector:
     matchLabels:
@@ -221,7 +223,7 @@ var _controller_saYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: manila-csi-driver-controller-sa
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 `)
 
 func controller_saYamlBytes() ([]byte, error) {
@@ -235,6 +237,35 @@ func controller_saYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "controller_sa.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _credentialsYaml = []byte(`apiVersion: cloudcredential.openshift.io/v1
+kind: CredentialsRequest
+metadata:
+  name: openshift-manila-csi-driver
+  namespace: openshift-cloud-credential-operator
+spec:
+  secretRef:
+    name: manila-cloud-credentials
+    namespace: openshift-manila-csi-driver
+  providerSpec:
+    apiVersion: cloudcredential.openshift.io/v1
+    kind: OpenStackProviderSpec
+`)
+
+func credentialsYamlBytes() ([]byte, error) {
+	return _credentialsYaml, nil
+}
+
+func credentialsYaml() (*asset, error) {
+	bytes, err := credentialsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "credentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -266,11 +297,32 @@ func csidriverYaml() (*asset, error) {
 	return a, nil
 }
 
+var _namespaceYaml = []byte(`apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-manila-csi-driver
+`)
+
+func namespaceYamlBytes() ([]byte, error) {
+	return _namespaceYaml, nil
+}
+
+func namespaceYaml() (*asset, error) {
+	bytes, err := namespaceYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "namespace.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _nodeYaml = []byte(`kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: manila-csi-driver-node
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 spec:
   selector:
     matchLabels:
@@ -402,7 +454,7 @@ var _node_nfsYaml = []byte(`kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: manila-csi-driver-node-nfs
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 spec:
   selector:
     matchLabels:
@@ -473,7 +525,7 @@ var _node_saYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: manila-csi-driver-node-sa
-  namespace: openshift-cluster-csi-drivers`)
+  namespace: openshift-manila-csi-driver`)
 
 func node_saYamlBytes() ([]byte, error) {
 	return _node_saYaml, nil
@@ -497,7 +549,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: manila-csi-driver-controller-sa
-    namespace: openshift-cluster-csi-drivers
+    namespace: openshift-manila-csi-driver
 roleRef:
   kind: ClusterRole
   name: manila-privileged-role
@@ -526,7 +578,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: manila-csi-driver-node-sa
-    namespace: openshift-cluster-csi-drivers
+    namespace: openshift-manila-csi-driver
 roleRef:
   kind: ClusterRole
   name: manila-privileged-role
@@ -581,7 +633,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: manila-csi-driver-controller-sa
-    namespace: openshift-cluster-csi-drivers
+    namespace: openshift-manila-csi-driver
 roleRef:
   kind: ClusterRole
   name: manila-external-provisioner-role
@@ -650,7 +702,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: manila-csi-driver-controller-sa
-    namespace: openshift-cluster-csi-drivers
+    namespace: openshift-manila-csi-driver
 roleRef:
   kind: ClusterRole
   name: manila-external-snapshotter-role
@@ -781,7 +833,9 @@ func AssetNames() []string {
 var _bindata = map[string]func() (*asset, error){
 	"controller.yaml":    controllerYaml,
 	"controller_sa.yaml": controller_saYaml,
+	"credentials.yaml":   credentialsYaml,
 	"csidriver.yaml":     csidriverYaml,
+	"namespace.yaml":     namespaceYaml,
 	"node.yaml":          nodeYaml,
 	"node_nfs.yaml":      node_nfsYaml,
 	"node_sa.yaml":       node_saYaml,
@@ -837,7 +891,9 @@ type bintree struct {
 var _bintree = &bintree{nil, map[string]*bintree{
 	"controller.yaml":    {controllerYaml, map[string]*bintree{}},
 	"controller_sa.yaml": {controller_saYaml, map[string]*bintree{}},
+	"credentials.yaml":   {credentialsYaml, map[string]*bintree{}},
 	"csidriver.yaml":     {csidriverYaml, map[string]*bintree{}},
+	"namespace.yaml":     {namespaceYaml, map[string]*bintree{}},
 	"node.yaml":          {nodeYaml, map[string]*bintree{}},
 	"node_nfs.yaml":      {node_nfsYaml, map[string]*bintree{}},
 	"node_sa.yaml":       {node_saYaml, map[string]*bintree{}},

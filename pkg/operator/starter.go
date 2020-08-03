@@ -35,7 +35,7 @@ const (
 
 func RunOperator(ctx context.Context, controllerConfig *controllercmd.ControllerContext) error {
 	kubeClient := kubeclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
-	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperatorNamespace, "")
+	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperandNamespace, "")
 
 	// Create GenericOperatorclient. This is used by controllers created down below
 	gvr := operatorapi.SchemeGroupVersion.WithResource("clustercsidrivers")
@@ -56,6 +56,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeInformersForNamespaces,
 		generated.Asset,
 		[]string{
+			"namespace.yaml",
 			"csidriver.yaml",
 			"controller_sa.yaml",
 			"node_sa.yaml",
@@ -71,10 +72,10 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		"ManilaDriverController",
 		factory.DefaultQueueKey,
 		operandName,
-		util.OperatorNamespace,
+		util.OperandNamespace,
 		assetWithNFSDriver,
 		kubeClient,
-		kubeInformersForNamespaces.InformersFor(util.OperatorNamespace),
+		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
 		csicontrollerset.WithControllerService("controller.yaml"),
 		csicontrollerset.WithNodeService("node.yaml"),
 	)
@@ -82,13 +83,13 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 	nfsCSIDriverController := csidrivercontroller.NewCSIDriverController(
 		"NFSDriverController",
 		"nfs-csi-driver",
-		util.OperatorNamespace,
+		util.OperandNamespace,
 		string(operatorapi.ManilaCSIDriver),
 		operatorClient,
 		assetWithNFSDriver,
 		kubeClient,
 		controllerConfig.EventRecorder,
-	).WithNodeService(kubeInformersForNamespaces.InformersFor(util.OperatorNamespace).Apps().V1().DaemonSets(), "node_nfs.yaml")
+	).WithNodeService(kubeInformersForNamespaces.InformersFor(util.OperandNamespace).Apps().V1().DaemonSets(), "node_nfs.yaml")
 
 	openstackClient, err := manila.NewOpenStackClient(util.CloudConfigFilename, kubeInformersForNamespaces)
 	if err != nil {

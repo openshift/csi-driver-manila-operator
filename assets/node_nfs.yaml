@@ -2,7 +2,7 @@ kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: manila-csi-driver-node-nfs
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 spec:
   selector:
     matchLabels:

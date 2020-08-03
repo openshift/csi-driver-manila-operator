@@ -2,7 +2,7 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: manila-csi-driver-controller
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 spec:
   selector:
     matchLabels:
