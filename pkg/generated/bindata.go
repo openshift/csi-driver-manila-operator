@@ -341,8 +341,7 @@ spec:
       serviceAccount: manila-csi-driver-node-sa
       priorityClassName: system-node-critical
       tolerations:
-        - key: CriticalAddonsOnly
-          operator: Exists
+        - operator: Exists
       containers:
         - name: csi-driver
           securityContext:
@@ -475,8 +474,7 @@ spec:
       serviceAccount: manila-csi-driver-node-sa
       priorityClassName: system-node-critical
       tolerations:
-        - key: CriticalAddonsOnly
-          operator: Exists
+        - operator: Exists
       containers:
         - name: csi-driver
           securityContext:
