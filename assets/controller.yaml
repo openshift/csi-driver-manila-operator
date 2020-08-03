@@ -1,18 +1,20 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: manila-csi-driver-controller
+  name: openstack-manila-csi-controllerplugin
   namespace: openshift-manila-csi-driver
 spec:
   selector:
     matchLabels:
-      app: manila-csi-driver-controller
+      app: openstack-manila-csi
+      component: controllerplugin
   serviceName: manila-csi-driver-controller
   replicas: 1
   template:
     metadata:
       labels:
-        app: manila-csi-driver-controller
+        app: openstack-manila-csi
+        component: controllerplugin
     spec:
       serviceAccount: manila-csi-driver-controller-sa
       priorityClassName: system-cluster-critical

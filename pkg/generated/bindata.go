@@ -71,18 +71,20 @@ func (fi bindataFileInfo) Sys() interface{} {
 var _controllerYaml = []byte(`kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: manila-csi-driver-controller
+  name: openstack-manila-csi-controllerplugin
   namespace: openshift-manila-csi-driver
 spec:
   selector:
     matchLabels:
-      app: manila-csi-driver-controller
+      app: openstack-manila-csi
+      component: controllerplugin
   serviceName: manila-csi-driver-controller
   replicas: 1
   template:
     metadata:
       labels:
-        app: manila-csi-driver-controller
+        app: openstack-manila-csi
+        component: controllerplugin
     spec:
       serviceAccount: manila-csi-driver-controller-sa
       priorityClassName: system-cluster-critical
@@ -321,16 +323,18 @@ func namespaceYaml() (*asset, error) {
 var _nodeYaml = []byte(`kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: manila-csi-driver-node
+  name: openstack-manila-csi-nodeplugin
   namespace: openshift-manila-csi-driver
 spec:
   selector:
     matchLabels:
-      app: manila-csi-driver-node
+      app: openstack-manila-csi
+      component: nodeplugin
   template:
     metadata:
       labels:
-        app: manila-csi-driver-node
+        app: openstack-manila-csi
+        component: nodeplugin
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -453,16 +457,18 @@ func nodeYaml() (*asset, error) {
 var _node_nfsYaml = []byte(`kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: manila-csi-driver-node-nfs
+  name: csi-nodeplugin-nfsplugin
   namespace: openshift-manila-csi-driver
 spec:
   selector:
     matchLabels:
-      app: manila-csi-driver-node-nfs
+      app: openstack-manila-csi
+      component: nfs-nodeplugin
   template:
     metadata:
       labels:
-        app: manila-csi-driver-node-nfs
+        app: openstack-manila-csi
+        component: nfs-nodeplugin
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
