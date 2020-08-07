@@ -23,7 +23,7 @@ import (
 
 // This ManilaController watches OpenStack and:
 // 1) Installs Manila CSI drivers (Manila itself, NFS) once
-//    it detects that there is Manlina present (by running provided
+//    it detects that there is Manila present (by running provided
 //    manilaOperatorSet).
 // 2) Creates StorageClass for each share type provided by Manila.
 // 3) If there is no Manila in the OpenStack where the cluster runs,
@@ -167,13 +167,10 @@ func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) 
 }
 
 func (c *ManilaController) setEnabledCondition() error {
-	availableCnd := operatorv1.OperatorCondition{
-		Type:   operatorConditionPrefix + operatorv1.OperatorStatusTypeAvailable,
-		Status: operatorv1.ConditionTrue,
-	}
-	_, _, err := v1helpers.UpdateStatus(c.operatorClient,
-		v1helpers.UpdateConditionFn(availableCnd),
-		removeConditionFn(operatorConditionPrefix+"Disabled"))
+	_, _, err := v1helpers.UpdateStatus(
+		c.operatorClient,
+		removeConditionFn(operatorConditionPrefix+"Disabled"),
+	)
 	return err
 }
 
@@ -184,9 +181,10 @@ func (c *ManilaController) setDisabledCondition(msg string) error {
 		Reason:  "NoManila",
 		Message: msg,
 	}
-	_, _, err := v1helpers.UpdateStatus(c.operatorClient,
+	_, _, err := v1helpers.UpdateStatus(
+		c.operatorClient,
 		v1helpers.UpdateConditionFn(disabledCnd),
-		removeConditionFn(operatorConditionPrefix+operatorv1.OperatorStatusTypeAvailable))
+	)
 	return err
 }
 
