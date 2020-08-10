@@ -11,7 +11,6 @@ import (
 	"github.com/openshift/csi-driver-manila-operator/pkg/controllers/secret"
 	"github.com/openshift/csi-driver-manila-operator/pkg/generated"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
-	"github.com/openshift/library-go/pkg/controller/factory"
 	"github.com/openshift/library-go/pkg/operator/resourcesynccontroller"
 	"k8s.io/client-go/dynamic"
 	kubeclient "k8s.io/client-go/kubernetes"
@@ -21,7 +20,9 @@ import (
 	operatorapi "github.com/openshift/api/operator/v1"
 	"github.com/openshift/library-go/pkg/controller/controllercmd"
 	csicontrollerset "github.com/openshift/library-go/pkg/operator/csi/csicontrollerset"
-	csidrivercontroller "github.com/openshift/library-go/pkg/operator/csi/csidrivercontroller"
+	"github.com/openshift/library-go/pkg/operator/csi/csidrivernodeservicecontroller"
+
+	// csidrivercontroller "github.com/openshift/library-go/pkg/operator/csi/csidrivercontroller"
 	goc "github.com/openshift/library-go/pkg/operator/genericoperatorclient"
 	"github.com/openshift/library-go/pkg/operator/v1helpers"
 )
@@ -75,16 +76,18 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			"rbac/controller_privileged_binding.yaml",
 			"rbac/node_privileged_binding.yaml",
 		},
-	).WithCSIDriverController(
-		"ManilaDriverController",
-		factory.DefaultQueueKey,
-		operandName,
-		util.OperandNamespace,
+	).WithCSIDriverControllerService(
+		"ManilaDriverControllerServiceController",
 		assetWithNFSDriver,
+		"controller.yaml",
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
-		csicontrollerset.WithControllerService("controller.yaml"),
-		csicontrollerset.WithNodeService("node.yaml"),
+	).WithCSIDriverNodeService(
+		"ManilaDriverNodeServiceController",
+		assetWithNFSDriver,
+		"node.yaml",
+		kubeClient,
+		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
 	).WithCredentialsRequestController(
 		"ManilaDriverCredentials",
 		util.OperandNamespace,
@@ -92,16 +95,14 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		"credentials.yaml",
 		dynamicClient)
 
-	nfsCSIDriverController := csidrivercontroller.NewCSIDriverController(
-		"NFSDriverController",
-		"nfs-csi-driver",
-		util.OperandNamespace,
-		string(operatorapi.ManilaCSIDriver),
+	nfsCSIDriverController := csidrivernodeservicecontroller.NewCSIDriverNodeServiceController(
+		"NFSDriverNodeServiceController",
+		assetWithNFSDriver("node_nfs.yaml"),
 		operatorClient,
-		assetWithNFSDriver,
 		kubeClient,
+		kubeInformersForNamespaces.InformersFor(util.OperandNamespace).Apps().V1().DaemonSets(),
 		controllerConfig.EventRecorder,
-	).WithNodeService(kubeInformersForNamespaces.InformersFor(util.OperandNamespace).Apps().V1().DaemonSets(), "node_nfs.yaml")
+	)
 
 	// sync config map with OpenStack CA certificate to the operand namespace,
 	// so the driver can get it as a ConfigMap volume.

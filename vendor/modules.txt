@@ -165,7 +165,7 @@ github.com/openshift/build-machinery-go/make/targets/golang
 github.com/openshift/build-machinery-go/make/targets/openshift
 github.com/openshift/build-machinery-go/make/targets/openshift/operator
 github.com/openshift/build-machinery-go/scripts
-# github.com/openshift/library-go v0.0.0-20200723181926-829d4689a31f
+# github.com/openshift/library-go v0.0.0-20200807122248-f5cb4d19a4fe
 github.com/openshift/library-go/pkg/config/client
 github.com/openshift/library-go/pkg/config/configdefaults
 github.com/openshift/library-go/pkg/config/leaderelection
@@ -178,7 +178,8 @@ github.com/openshift/library-go/pkg/crypto
 github.com/openshift/library-go/pkg/operator/condition
 github.com/openshift/library-go/pkg/operator/csi/credentialsrequestcontroller
 github.com/openshift/library-go/pkg/operator/csi/csicontrollerset
-github.com/openshift/library-go/pkg/operator/csi/csidrivercontroller
+github.com/openshift/library-go/pkg/operator/csi/csidrivercontrollerservicecontroller
+github.com/openshift/library-go/pkg/operator/csi/csidrivernodeservicecontroller
 github.com/openshift/library-go/pkg/operator/events
 github.com/openshift/library-go/pkg/operator/genericoperatorclient
 github.com/openshift/library-go/pkg/operator/loglevel
