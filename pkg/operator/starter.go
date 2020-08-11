@@ -38,7 +38,7 @@ const (
 
 func RunOperator(ctx context.Context, controllerConfig *controllercmd.ControllerContext) error {
 	kubeClient := kubeclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
-	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperandNamespace, "")
+	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperandNamespace, util.CloudConfigNamespace, "")
 
 	dynamicClient, err := dynamic.NewForConfig(controllerConfig.KubeConfig)
 	if err != nil {
@@ -120,7 +120,9 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeClient.CoreV1(),
 		kubeClient.CoreV1(),
 		controllerConfig.EventRecorder)
-	certController.SyncConfigMap(dstConfigMap, srcConfigMap)
+	if err := certController.SyncConfigMap(dstConfigMap, srcConfigMap); err != nil {
+		return err
+	}
 
 	openstackClient, err := manila.NewOpenStackClient(util.CloudConfigFilename, kubeInformersForNamespaces)
 	if err != nil {
