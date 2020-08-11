@@ -76,6 +76,10 @@ rules:
   - get
   - list
   - watch
+  # For CA certificate sync
+  - create
+  - patch
+  - update
 - apiGroups:
   - ''
   resources:
@@ -211,6 +215,18 @@ rules:
   - update
   - delete
 - apiGroups:
+  - csi.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - cloudcredential.openshift.io
+  resources:
+  - credentialsrequests
+  verbs:
+  - '*'
+- apiGroups:
   - config.openshift.io
   resources:
   - infrastructures
@@ -221,18 +237,7 @@ rules:
 - apiGroups:
   - operator.openshift.io
   resources:
-  - clustercsidrivers
+  - 'clustercsidrivers'
+  - 'clustercsidrivers/status'
   verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - operator.openshift.io
-  resources:
-  - clustercsidrivers/status
-  verbs:
-  - get
-  - list
-  - watch
-  - patch
-  - update
+  - '*'
