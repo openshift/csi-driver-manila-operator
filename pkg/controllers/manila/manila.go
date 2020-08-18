@@ -2,6 +2,7 @@ package manila
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/gophercloud/gophercloud"
@@ -143,7 +144,7 @@ func (c *ManilaController) applyStorageClass(ctx context.Context, expected *stor
 }
 
 func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) *storagev1.StorageClass {
-	storageClassName := util.StorageClassNamePrefix + shareType.Name
+	storageClassName := util.StorageClassNamePrefix + strings.ToLower(shareType.Name)
 	delete := corev1.PersistentVolumeReclaimDelete
 	immediate := storagev1.VolumeBindingImmediate
 	sc := &storagev1.StorageClass{
