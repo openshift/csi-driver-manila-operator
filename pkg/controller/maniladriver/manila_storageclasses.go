@@ -2,6 +2,7 @@ package maniladriver
 
 import (
 	"context"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
@@ -31,7 +32,7 @@ func (r *ReconcileManilaDriver) handleManilaStorageClasses(instance *maniladrive
 }
 
 func (r *ReconcileManilaDriver) handleManilaStorageClass(instance *maniladriverv1alpha1.ManilaDriver, shareType sharetypes.ShareType, reqLogger logr.Logger) error {
-	storageClassName := storageClassNamePrefix + shareType.Name
+	storageClassName := storageClassNamePrefix + strings.ToLower(shareType.Name)
 	reqLogger.Info("Reconciling Manila StorageClass", "StorageClass.Name", storageClassName)
 
 	// Define a new StorageClass object
