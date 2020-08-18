@@ -433,6 +433,7 @@ spec:
               memory: 50Mi
               cpu: 10m
           args:
+            - --v=${LOG_LEVEL}
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=unix://plugin/csi.sock"
             - "--mount-permissions=0777"
