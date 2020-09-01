@@ -46,9 +46,14 @@ spec:
           mountPath: /usr/share/pki/ca-trust-source
       priorityClassName: system-cluster-critical
       serviceAccountName: manila-csi-driver-operator
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
       resources:
         requests:
           cpu: 10m
