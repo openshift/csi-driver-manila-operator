@@ -12,7 +12,6 @@ import (
 	"github.com/openshift/csi-driver-manila-operator/pkg/generated"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
 	"github.com/openshift/library-go/pkg/operator/resourcesynccontroller"
-	"k8s.io/client-go/dynamic"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
@@ -39,11 +38,6 @@ const (
 func RunOperator(ctx context.Context, controllerConfig *controllercmd.ControllerContext) error {
 	kubeClient := kubeclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
 	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperandNamespace, util.CloudConfigNamespace, "")
-
-	dynamicClient, err := dynamic.NewForConfig(controllerConfig.KubeConfig)
-	if err != nil {
-		return err
-	}
 
 	// Create GenericOperatorclient. This is used by controllers created down below
 	gvr := operatorapi.SchemeGroupVersion.WithResource("clustercsidrivers")
@@ -88,12 +82,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		"node.yaml",
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
-	).WithCredentialsRequestController(
-		"ManilaDriverCredentials",
-		util.OperandNamespace,
-		generated.MustAsset,
-		"credentials.yaml",
-		dynamicClient)
+	)
 
 	nfsCSIDriverController := csidrivernodeservicecontroller.NewCSIDriverNodeServiceController(
 		"NFSDriverNodeServiceController",
