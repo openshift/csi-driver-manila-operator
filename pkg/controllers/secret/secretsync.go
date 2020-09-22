@@ -35,6 +35,8 @@ const (
 	cloudSecretKey = "clouds.yaml"
 	// Name of OpenStack in clouds.yaml
 	cloudName = "openstack"
+	// Canonical path for custom ca certificates
+	cacertPath = "/etc/kubernetes/static-pod-resources/configmaps/cloud-config/ca-bundle.pem"
 )
 
 func NewSecretSyncController(
@@ -145,7 +147,8 @@ func (c *SecretSyncController) translateSecret(cloudSecret *v1.Secret) (*v1.Secr
 		data["os-domainName"] = []byte(cloud.AuthInfo.UserDomainName)
 	}
 	if cloud.CACertFile != "" {
-		data["os-certAuthorityPath"] = []byte(cloud.CACertFile)
+		// Replace the original cert authority path from clouds.yaml with the canonical one
+		data["os-certAuthorityPath"] = []byte(cacertPath)
 	}
 
 	secret := v1.Secret{
