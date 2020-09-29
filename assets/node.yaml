@@ -55,7 +55,7 @@ spec:
             - name: fwd-plugin-dir
               mountPath: /var/lib/kubelet/plugins/csi-nfsplugin
             - name: cacert
-              mountPath: /usr/share/pki/ca-trust-source
+              mountPath: /etc/kubernetes/static-pod-resources/configmaps/cloud-config
           resources:
             requests:
               cpu: 10m
@@ -104,7 +104,7 @@ spec:
             path: /var/lib/kubelet/plugins/csi-nfsplugin
             type: DirectoryOrCreate
         - name: cacert
-          # Extract ca-bundle.pem to /usr/share/pki/ca-trust-source if present.
+          # Extract ca-bundle.pem to /etc/kubernetes/static-pod-resources/configmaps/cloud-config if present.
           # Let the pod start when the ConfigMap does not exist or the certificate
           # is not preset there. The certificate file will be created once the
           # ConfigMap is created / the cerificate is added to it.
