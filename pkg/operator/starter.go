@@ -12,11 +12,14 @@ import (
 	"github.com/openshift/csi-driver-manila-operator/pkg/generated"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
 	"github.com/openshift/library-go/pkg/operator/resourcesynccontroller"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 
 	operatorapi "github.com/openshift/api/operator/v1"
+	configclient "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
 	"github.com/openshift/library-go/pkg/controller/controllercmd"
 	csicontrollerset "github.com/openshift/library-go/pkg/operator/csi/csicontrollerset"
 	"github.com/openshift/library-go/pkg/operator/csi/csidrivernodeservicecontroller"
@@ -38,6 +41,12 @@ const (
 func RunOperator(ctx context.Context, controllerConfig *controllercmd.ControllerContext) error {
 	kubeClient := kubeclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
 	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperatorNamespace, util.OperandNamespace, util.CloudConfigNamespace, "")
+	configClient := configclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
+
+	clusterInfra, err := configClient.Infrastructures().Get(ctx, "cluster", metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve cluster Infrastructure object: %v", err)
+	}
 
 	// Create GenericOperatorclient. This is used by controllers created down below
 	gvr := operatorapi.SchemeGroupVersion.WithResource("clustercsidrivers")
@@ -137,6 +146,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			certController,
 		},
 		controllerConfig.EventRecorder,
+		clusterInfra.Status.InfrastructureName,
 	)
 
 	klog.Info("Starting the informers")
