@@ -6,7 +6,6 @@ require (
 	github.com/go-bindata/go-bindata v3.1.2+incompatible
 	github.com/gophercloud/gophercloud v0.6.1-0.20191122030953-d8ac278c1c9d
 	github.com/gophercloud/utils v0.0.0-20200508015959-b0167b94122c
-	github.com/kubernetes-sigs/kube-storage-version-migrator v0.0.0-20191127225502-51849bc15f17 // indirect
 	github.com/openshift/api v0.0.0-20200827090112-c05698d102cf
 	github.com/openshift/build-machinery-go v0.0.0-20200819073603-48aa266c95f7
 	github.com/openshift/library-go v0.0.0-20200929145920-05013f256034
