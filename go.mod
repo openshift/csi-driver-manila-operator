@@ -8,6 +8,7 @@ require (
 	github.com/gophercloud/utils v0.0.0-20200508015959-b0167b94122c
 	github.com/openshift/api v0.0.0-20200827090112-c05698d102cf
 	github.com/openshift/build-machinery-go v0.0.0-20200819073603-48aa266c95f7
+	github.com/openshift/client-go v0.0.0-20200827190008-3062137373b5
 	github.com/openshift/library-go v0.0.0-20200929145920-05013f256034
 	github.com/prometheus/client_golang v1.7.1
 	github.com/spf13/cobra v1.0.0
