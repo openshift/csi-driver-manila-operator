@@ -19,9 +19,12 @@ import (
 	"k8s.io/klog/v2"
 
 	operatorapi "github.com/openshift/api/operator/v1"
-	configclient "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
+	configclient "github.com/openshift/client-go/config/clientset/versioned"
+	configclientv1 "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
+	configinformers "github.com/openshift/client-go/config/informers/externalversions"
 	"github.com/openshift/library-go/pkg/controller/controllercmd"
 	csicontrollerset "github.com/openshift/library-go/pkg/operator/csi/csicontrollerset"
+	"github.com/openshift/library-go/pkg/operator/csi/csidrivercontrollerservicecontroller"
 	"github.com/openshift/library-go/pkg/operator/csi/csidrivernodeservicecontroller"
 
 	// csidrivercontroller "github.com/openshift/library-go/pkg/operator/csi/csidrivercontroller"
@@ -41,9 +44,12 @@ const (
 func RunOperator(ctx context.Context, controllerConfig *controllercmd.ControllerContext) error {
 	kubeClient := kubeclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
 	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperatorNamespace, util.OperandNamespace, util.CloudConfigNamespace, "")
-	configClient := configclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
 
-	clusterInfra, err := configClient.Infrastructures().Get(ctx, "cluster", metav1.GetOptions{})
+	configClientv1 := configclientv1.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
+	configClient := configclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
+	configInformers := configinformers.NewSharedInformerFactory(configClient, resync)
+
+	clusterInfra, err := configClientv1.Infrastructures().Get(ctx, "cluster", metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed to retrieve cluster Infrastructure object: %v", err)
 	}
@@ -79,18 +85,24 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			"rbac/controller_privileged_binding.yaml",
 			"rbac/node_privileged_binding.yaml",
 		},
+	).WithCSIConfigObserverController(
+		"ManilaDriverCSIConfigObserverController",
+		configInformers,
 	).WithCSIDriverControllerService(
 		"ManilaDriverControllerServiceController",
 		assetWithNFSDriver,
 		"controller.yaml",
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
+		configInformers,
+		csidrivercontrollerservicecontroller.WithObservedProxyDeploymentHook(),
 	).WithCSIDriverNodeService(
 		"ManilaDriverNodeServiceController",
 		assetWithNFSDriver,
 		"node.yaml",
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
+		csidrivernodeservicecontroller.WithObservedProxyDaemonSetHook(),
 	)
 
 	nfsCSIDriverController := csidrivernodeservicecontroller.NewCSIDriverNodeServiceController(

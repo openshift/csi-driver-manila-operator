@@ -72,6 +72,8 @@ apiVersion: apps/v1
 metadata:
   name: openstack-manila-csi-controllerplugin
   namespace: openshift-manila-csi-driver
+  annotations:
+    config.openshift.io/inject-proxy: csi-driver
 spec:
   selector:
     matchLabels:
@@ -304,6 +306,8 @@ apiVersion: apps/v1
 metadata:
   name: openstack-manila-csi-nodeplugin
   namespace: openshift-manila-csi-driver
+  annotations:
+    config.openshift.io/inject-proxy: csi-driver
 spec:
   selector:
     matchLabels:

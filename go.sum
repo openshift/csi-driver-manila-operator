@@ -446,6 +446,7 @@ github.com/openshift/client-go v0.0.0-20200827190008-3062137373b5/go.mod h1:5rGm
 github.com/openshift/client-go v0.0.0-20201214125552-e615e336eb49/go.mod h1:9/jG4I6sh+5QublJpZZ4Zs/P4/QCXMsQQ/K/058bSB8=
 github.com/openshift/client-go v0.0.0-20210112165513-ebc401615f47 h1:+TEY29DK0XhqB7HFC9OfV8qf3wffSyi7MWv3AP28DGQ=
 github.com/openshift/client-go v0.0.0-20210112165513-ebc401615f47/go.mod h1:u7NRAjtYVAKokiI9LouzTv4mhds8P4S1TwdVAfbjKSk=
+github.com/openshift/client-go v3.9.0+incompatible h1:13k3Ok0B7TA2hA3bQW2aFqn6y04JaJWdk7ITTyg+Ek0=
 github.com/openshift/library-go v0.0.0-20200929145920-05013f256034 h1:hMjoIjYDatunQrfR9BirYQYewQ2b4hS1JyIudCVBNfY=
 github.com/openshift/library-go v0.0.0-20200929145920-05013f256034/go.mod h1:NI6xOQGuTnLXeHW8Z2glKSFhF7X+YxlAlqlBMaK0zEM=
 github.com/openshift/library-go v0.0.0-20210113192829-cfbb3f4c80c2 h1:UAzyFzukxe6zvQKbORXtY3C3hyRkXYfPkDeJXV89DpU=
