@@ -44,7 +44,6 @@ type ManilaController struct {
 	csiControllers     []Runnable
 	controllersRunning bool
 	eventRecorder      events.Recorder
-	clusterID          string
 }
 
 type Runnable interface {
@@ -66,8 +65,7 @@ func NewManilaController(
 	informers v1helpers.KubeInformersForNamespaces,
 	openStackClient *openStackClient,
 	csiControllers []Runnable,
-	eventRecorder events.Recorder,
-	clusterID string) factory.Controller {
+	eventRecorder events.Recorder) factory.Controller {
 
 	scInformer := informers.InformersFor("").Storage().V1().StorageClasses()
 	c := &ManilaController{
@@ -155,8 +153,7 @@ func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) 
 		},
 		Provisioner: "manila.csi.openstack.org",
 		Parameters: map[string]string{
-			"type":                shareType.Name,
-			"appendShareMetadata": "{\"openshiftClusterID\": \"" + c.clusterID + "\"}",
+			"type": shareType.Name,
 			"csi.storage.k8s.io/provisioner-secret-name":       util.ManilaSecretName,
 			"csi.storage.k8s.io/provisioner-secret-namespace":  util.OperandNamespace,
 			"csi.storage.k8s.io/node-stage-secret-name":        util.ManilaSecretName,
