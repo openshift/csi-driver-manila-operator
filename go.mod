@@ -4,20 +4,26 @@ go 1.13
 
 require (
 	github.com/go-bindata/go-bindata v3.1.2+incompatible
+	github.com/go-logr/logr v0.3.0 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gophercloud/gophercloud v0.6.1-0.20191122030953-d8ac278c1c9d
 	github.com/gophercloud/utils v0.0.0-20200508015959-b0167b94122c
-	github.com/openshift/api v0.0.0-20200827090112-c05698d102cf
-	github.com/openshift/build-machinery-go v0.0.0-20200819073603-48aa266c95f7
-	github.com/openshift/client-go v0.0.0-20200827190008-3062137373b5
-	github.com/openshift/library-go v0.0.0-20200929145920-05013f256034
+	github.com/openshift/api v0.0.0-20210105115604-44119421ec6b
+	github.com/openshift/build-machinery-go v0.0.0-20200917070002-f171684f77ab
+	github.com/openshift/client-go v0.0.0-20210112165513-ebc401615f47
+	github.com/openshift/library-go v0.0.0-20210113192829-cfbb3f4c80c2
 	github.com/prometheus/client_golang v1.7.1
-	github.com/spf13/cobra v1.0.0
+	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.19.0
-	k8s.io/apimachinery v0.19.0
-	k8s.io/client-go v0.19.0
-	k8s.io/component-base v0.19.0
-	k8s.io/klog/v2 v2.3.0
+	github.com/ugorji/go v1.1.4 // indirect
+	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
+	golang.org/x/text v0.3.5 // indirect
+	gopkg.in/yaml.v2 v2.4.0
+	k8s.io/api v0.20.1
+	k8s.io/apimachinery v0.20.1
+	k8s.io/client-go v0.20.0
+	k8s.io/component-base v0.20.0
+	k8s.io/klog/v2 v2.4.0
 	sigs.k8s.io/yaml v1.2.0
 )
