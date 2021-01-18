@@ -97,6 +97,9 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 	shareTypes, err := c.openStackClient.GetShareTypes()
 	if err != nil {
 		switch err.(type) {
+		case gophercloud.ErrDefault403:
+			// User doesn't have permissions to list share types, report the operator as disabled
+			return c.setDisabledCondition("User doesn't have access to Manila service")
 		case *gophercloud.ErrEndpointNotFound:
 			// OpenStack does not support manila, report the operator as disabled
 			return c.setDisabledCondition("This OpenStack cluster does not provide Manila service")
