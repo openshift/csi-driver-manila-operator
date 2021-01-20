@@ -85,7 +85,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		"controller.yaml",
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
-		configInformers,
+		nil,
 		csidrivercontrollerservicecontroller.WithObservedProxyDeploymentHook(),
 	).WithCSIDriverNodeService(
 		"ManilaDriverNodeServiceController",
@@ -94,7 +94,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
 		csidrivernodeservicecontroller.WithObservedProxyDaemonSetHook(),
-	)
+	).WithExtraInformers(configInformers.Config().V1().Proxies().Informer())
 
 	nfsCSIDriverController := csidrivernodeservicecontroller.NewCSIDriverNodeServiceController(
 		"NFSDriverNodeServiceController",
@@ -154,6 +154,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 	klog.Info("Starting the informers")
 	go kubeInformersForNamespaces.Start(ctx.Done())
 	go dynamicInformers.Start(ctx.Done())
+	go configInformers.Start(ctx.Done())
 
 	klog.Info("Starting controllers")
 	go manilaController.Run(ctx, 1)
