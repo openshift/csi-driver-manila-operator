@@ -2,6 +2,7 @@ package manila
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/errors"
+	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/kubernetes"
 	storagelisters "k8s.io/client-go/listers/storage/v1"
 	"k8s.io/klog/v2"
@@ -94,14 +95,18 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 		return nil
 	}
 
+	var err403 gophercloud.ErrDefault403
+	var errNoEndpoint *gophercloud.ErrEndpointNotFound
 	shareTypes, err := c.openStackClient.GetShareTypes()
 	if err != nil {
-		switch err.(type) {
-		case gophercloud.ErrDefault403:
+		switch {
+		case errors.As(err, &err403):
 			// User doesn't have permissions to list share types, report the operator as disabled
+			klog.V(4).Infof("User doesn't have access to Manila service: %v", err)
 			return c.setDisabledCondition("User doesn't have access to Manila service")
-		case *gophercloud.ErrEndpointNotFound:
+		case errors.As(err, &errNoEndpoint):
 			// OpenStack does not support manila, report the operator as disabled
+			klog.V(4).Infof("This OpenStack cluster does not provide Manila service: %v", err)
 			return c.setDisabledCondition("This OpenStack cluster does not provide Manila service")
 		default:
 			return err
@@ -138,7 +143,7 @@ func (c *ManilaController) syncStorageClasses(ctx context.Context, shareTypes []
 			errs = append(errs, err)
 		}
 	}
-	return errors.NewAggregate(errs)
+	return k8serrors.NewAggregate(errs)
 }
 
 func (c *ManilaController) applyStorageClass(ctx context.Context, expected *storagev1.StorageClass) error {
