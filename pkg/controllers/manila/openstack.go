@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -74,6 +75,8 @@ func (o *openStackClient) GetShareTypes() ([]sharetypes.ShareType, error) {
 		}
 		provider.HTTPClient = client
 	}
+
+	provider.HTTPClient.Timeout = 120 * time.Second
 
 	err = openstack.Authenticate(provider, *opts)
 	if err != nil {
