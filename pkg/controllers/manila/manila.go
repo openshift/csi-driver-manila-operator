@@ -104,6 +104,10 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 			// User doesn't have permissions to list share types, report the operator as disabled
 			klog.V(4).Infof("User doesn't have access to Manila service: %v", err)
 			return c.setDisabledCondition("User doesn't have access to Manila service")
+		case isNotFoundError(err):
+			// Manila Share Type API is not available
+			klog.V(4).Infof("Cannot find API to fetch Manila share types: %v", err)
+			return c.setDisabledCondition("Cannot find API to fetch Manila share types")
 		case errors.As(err, &errNoEndpoint):
 			// OpenStack does not support manila, report the operator as disabled
 			klog.V(4).Infof("This OpenStack cluster does not provide Manila service: %v", err)
@@ -202,4 +206,13 @@ func removeConditionFn(cnd string) v1helpers.UpdateStatusFunc {
 		v1helpers.RemoveOperatorCondition(&oldStatus.Conditions, cnd)
 		return nil
 	}
+}
+
+func isNotFoundError(err error) bool {
+	var errNotFound gophercloud.ErrResourceNotFound
+	var pErrNotFound *gophercloud.ErrResourceNotFound
+	var errDefault404 gophercloud.ErrDefault404
+	var pErrDefault404 *gophercloud.ErrDefault404
+
+	return errors.As(err, &errNotFound) || errors.As(err, &pErrNotFound) || errors.As(err, &errDefault404) || errors.As(err, &pErrDefault404)
 }
