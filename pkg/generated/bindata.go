@@ -279,6 +279,8 @@ var _namespaceYaml = []byte(`apiVersion: v1
 kind: Namespace
 metadata:
   name: openshift-manila-csi-driver
+  annotations:
+    openshift.io/node-selector: ""
 `)
 
 func namespaceYamlBytes() ([]byte, error) {
