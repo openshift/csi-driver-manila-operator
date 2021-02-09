@@ -79,7 +79,6 @@ spec:
     matchLabels:
       app: openstack-manila-csi
       component: controllerplugin
-  serviceName: manila-csi-driver-controller
   replicas: 1
   template:
     metadata:
