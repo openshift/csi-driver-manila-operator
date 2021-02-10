@@ -46,23 +46,23 @@ func (o *openStackClient) GetShareTypes() ([]sharetypes.ShareType, error) {
 
 	opts, err := clientconfig.AuthOptions(clientOpts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate auth options: %w", err)
 	}
 
 	provider, err := openstack.NewClient(opts.IdentityEndpoint)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create a provider client: %w", err)
 	}
 
 	cert, err := getCloudProviderCert()
 	if err != nil && !os.IsNotExist(err) {
-		return nil, fmt.Errorf("failed to get cloud provider CA certificate: %v", err)
+		return nil, fmt.Errorf("failed to get cloud provider CA certificate: %w", err)
 	}
 
 	if len(cert) > 0 {
 		certPool, err := x509.SystemCertPool()
 		if err != nil {
-			return nil, fmt.Errorf("create system cert pool failed: %v", err)
+			return nil, fmt.Errorf("create system cert pool failed: %w", err)
 		}
 		certPool.AppendCertsFromPEM(cert)
 		client := http.Client{
@@ -77,19 +77,19 @@ func (o *openStackClient) GetShareTypes() ([]sharetypes.ShareType, error) {
 
 	err = openstack.Authenticate(provider, *opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot authenticate with given credentials: %w", err)
 	}
 
 	client, err := openstack.NewSharedFileSystemV2(provider, gophercloud.EndpointOpts{
 		Region: clientOpts.RegionName,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot find an endpoint for Shared File Systems API v2: %w", err)
 	}
 
 	allPages, err := sharetypes.List(client, &sharetypes.ListOpts{}).AllPages()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot list available share types: %w", err)
 	}
 
 	return sharetypes.ExtractShareTypes(allPages)
@@ -103,7 +103,7 @@ func getCloudFromFile(filename string) (*clientconfig.Cloud, error) {
 	var clouds clientconfig.Clouds
 	err = yaml.Unmarshal(cloudConfig, &clouds)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal clouds credentials from %s: %v", filename, err)
+		return nil, fmt.Errorf("failed to unmarshal clouds credentials from %s: %w", filename, err)
 	}
 
 	cfg, ok := clouds.Clouds[util.CloudName]
