@@ -8,12 +8,18 @@
 // assets/node_nfs.yaml
 // assets/node_sa.yaml
 // assets/rbac/controller_privileged_binding.yaml
+// assets/rbac/kube_rbac_proxy_binding.yaml
+// assets/rbac/kube_rbac_proxy_role.yaml
 // assets/rbac/node_privileged_binding.yaml
 // assets/rbac/privileged_role.yaml
+// assets/rbac/prometheus_role.yaml
+// assets/rbac/prometheus_rolebinding.yaml
 // assets/rbac/provisioner_binding.yaml
 // assets/rbac/provisioner_role.yaml
 // assets/rbac/snapshotter_binding.yaml
 // assets/rbac/snapshotter_role.yaml
+// assets/service.yaml
+// assets/servicemonitor.yaml
 package generated
 
 import (
@@ -165,6 +171,7 @@ spec:
             - --csi-address=$(ADDRESS)
             - --feature-gates=Topology=true
             - --v=${LOG_LEVEL}
+            - --http-endpoint=localhost:8202
             - --timeout=120s
           env:
             - name: ADDRESS
@@ -176,6 +183,28 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          # kube-rbac-proxy for external-provisioner container.
+          # Provides https proxy for http-based external-provisioner metrics.
+        - name: provisioner-kube-rbac-proxy
+          args:
+          - --secure-listen-address=0.0.0.0:9202
+          - --upstream=http://127.0.0.1:8202/
+          - --tls-cert-file=/etc/tls/private/tls.crt
+          - --tls-private-key-file=/etc/tls/private/tls.key
+          - --logtostderr=true
+          image: ${KUBE_RBAC_PROXY_IMAGE}
+          imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 9202
+            name: provisioner-m
+            protocol: TCP
+          resources:
+            requests:
+              memory: 20Mi
+              cpu: 10m
+          volumeMounts:
+          - mountPath: /etc/tls/private
+            name: metrics-serving-cert
         - name: csi-snapshotter
           image: ${SNAPSHOTTER_IMAGE}
           resources:
@@ -184,6 +213,7 @@ spec:
               cpu: 10m
           args:
             - --csi-address=$(ADDRESS)
+            - --metrics-address=localhost:8203
             - --v=${LOG_LEVEL}
           env:
           - name: ADDRESS
@@ -195,6 +225,26 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+        - name: snapshotter-kube-rbac-proxy
+          args:
+          - --secure-listen-address=0.0.0.0:9203
+          - --upstream=http://127.0.0.1:8203/
+          - --tls-cert-file=/etc/tls/private/tls.crt
+          - --tls-private-key-file=/etc/tls/private/tls.key
+          - --logtostderr=true
+          image: ${KUBE_RBAC_PROXY_IMAGE}
+          imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 9203
+            name: snapshotter-m
+            protocol: TCP
+          resources:
+            requests:
+              memory: 20Mi
+              cpu: 10m
+          volumeMounts:
+          - mountPath: /etc/tls/private
+            name: metrics-serving-cert
       volumes:
         - name: socket-dir
           emptyDir: {}
@@ -210,6 +260,9 @@ spec:
             - key: ca-bundle.pem
               path: ca-bundle.pem
             optional: true
+        - name: metrics-serving-cert
+          secret:
+            secretName: manila-csi-driver-controller-metrics-serving-cert
 `)
 
 func controllerYamlBytes() ([]byte, error) {
@@ -566,6 +619,65 @@ func rbacController_privileged_bindingYaml() (*asset, error) {
 	return a, nil
 }
 
+var _rbacKube_rbac_proxy_bindingYaml = []byte(`# Allow kube-rbac-proxies to create tokenreviews to check Prometheus identity when scraping metrics.
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: manila-kube-rbac-proxy-binding
+subjects:
+  - kind: ServiceAccount
+    name: manila-csi-driver-controller-sa
+    namespace: openshift-cluster-csi-drivers
+roleRef:
+  kind: ClusterRole
+  name: manila-kube-rbac-proxy-role
+  apiGroup: rbac.authorization.k8s.io
+`)
+
+func rbacKube_rbac_proxy_bindingYamlBytes() ([]byte, error) {
+	return _rbacKube_rbac_proxy_bindingYaml, nil
+}
+
+func rbacKube_rbac_proxy_bindingYaml() (*asset, error) {
+	bytes, err := rbacKube_rbac_proxy_bindingYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "rbac/kube_rbac_proxy_binding.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _rbacKube_rbac_proxy_roleYaml = []byte(`# Allow kube-rbac-proxies to create tokenreviews to check Prometheus identity when scraping metrics.
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: manila-kube-rbac-proxy-role
+rules:
+  - apiGroups:
+    - "authentication.k8s.io"
+    resources:
+    - "tokenreviews"
+    verbs:
+    - "create"
+`)
+
+func rbacKube_rbac_proxy_roleYamlBytes() ([]byte, error) {
+	return _rbacKube_rbac_proxy_roleYaml, nil
+}
+
+func rbacKube_rbac_proxy_roleYaml() (*asset, error) {
+	bytes, err := rbacKube_rbac_proxy_roleYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "rbac/kube_rbac_proxy_role.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _rbacNode_privileged_bindingYaml = []byte(`kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -617,6 +729,71 @@ func rbacPrivileged_roleYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "rbac/privileged_role.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _rbacPrometheus_roleYaml = []byte(`# Role for accessing metrics exposed by the operator
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: manila-csi-driver-prometheus
+  namespace: openshift-cluster-csi-drivers
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+`)
+
+func rbacPrometheus_roleYamlBytes() ([]byte, error) {
+	return _rbacPrometheus_roleYaml, nil
+}
+
+func rbacPrometheus_roleYaml() (*asset, error) {
+	bytes, err := rbacPrometheus_roleYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "rbac/prometheus_role.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _rbacPrometheus_rolebindingYaml = []byte(`# Grant cluster-monitoring access to the operator metrics service
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: manila-csi-driver-prometheus
+  namespace: openshift-cluster-csi-drivers
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: manila-csi-driver-prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus-k8s
+  namespace: openshift-monitoring
+`)
+
+func rbacPrometheus_rolebindingYamlBytes() ([]byte, error) {
+	return _rbacPrometheus_rolebindingYaml, nil
+}
+
+func rbacPrometheus_rolebindingYaml() (*asset, error) {
+	bytes, err := rbacPrometheus_rolebindingYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "rbac/prometheus_rolebinding.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -777,6 +954,90 @@ func rbacSnapshotter_roleYaml() (*asset, error) {
 	return a, nil
 }
 
+var _serviceYaml = []byte(`apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: manila-csi-driver-controller-metrics-serving-cert
+  labels:
+    app: manila-csi-driver-controller-metrics
+  name: manila-csi-driver-controller-metrics
+  namespace: openshift-cluster-csi-drivers
+spec:
+  ports:
+  - name: provisioner-m
+    port: 443
+    protocol: TCP
+    targetPort: provisioner-m
+  - name: snapshotter-m
+    port: 444
+    protocol: TCP
+    targetPort: snapshotter-m
+  selector:
+    app: manila-csi-driver-controller
+  sessionAffinity: None
+  type: ClusterIP
+`)
+
+func serviceYamlBytes() ([]byte, error) {
+	return _serviceYaml, nil
+}
+
+func serviceYaml() (*asset, error) {
+	bytes, err := serviceYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "service.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _servicemonitorYaml = []byte(`apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: manila-csi-driver-controller-monitor
+  namespace: openshift-cluster-csi-drivers
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    interval: 30s
+    path: /metrics
+    port: provisioner-m
+    scheme: https
+    tlsConfig:
+      caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
+      serverName: manila-csi-driver-controller-metrics.openshift-cluster-csi-drivers.svc
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    interval: 30s
+    path: /metrics
+    port: snapshotter-m
+    scheme: https
+    tlsConfig:
+      caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
+      serverName: manila-csi-driver-controller-metrics.openshift-cluster-csi-drivers.svc
+  jobLabel: component
+  selector:
+    matchLabels:
+      app: manila-csi-driver-controller-metrics
+`)
+
+func servicemonitorYamlBytes() ([]byte, error) {
+	return _servicemonitorYaml, nil
+}
+
+func servicemonitorYaml() (*asset, error) {
+	bytes, err := servicemonitorYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "servicemonitor.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -837,12 +1098,18 @@ var _bindata = map[string]func() (*asset, error){
 	"node_nfs.yaml":      node_nfsYaml,
 	"node_sa.yaml":       node_saYaml,
 	"rbac/controller_privileged_binding.yaml": rbacController_privileged_bindingYaml,
+	"rbac/kube_rbac_proxy_binding.yaml":       rbacKube_rbac_proxy_bindingYaml,
+	"rbac/kube_rbac_proxy_role.yaml":          rbacKube_rbac_proxy_roleYaml,
 	"rbac/node_privileged_binding.yaml":       rbacNode_privileged_bindingYaml,
 	"rbac/privileged_role.yaml":               rbacPrivileged_roleYaml,
+	"rbac/prometheus_role.yaml":               rbacPrometheus_roleYaml,
+	"rbac/prometheus_rolebinding.yaml":        rbacPrometheus_rolebindingYaml,
 	"rbac/provisioner_binding.yaml":           rbacProvisioner_bindingYaml,
 	"rbac/provisioner_role.yaml":              rbacProvisioner_roleYaml,
 	"rbac/snapshotter_binding.yaml":           rbacSnapshotter_bindingYaml,
 	"rbac/snapshotter_role.yaml":              rbacSnapshotter_roleYaml,
+	"service.yaml":                            serviceYaml,
+	"servicemonitor.yaml":                     servicemonitorYaml,
 }
 
 // AssetDir returns the file names below a certain
@@ -895,13 +1162,19 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"node_sa.yaml":       {node_saYaml, map[string]*bintree{}},
 	"rbac": {nil, map[string]*bintree{
 		"controller_privileged_binding.yaml": {rbacController_privileged_bindingYaml, map[string]*bintree{}},
+		"kube_rbac_proxy_binding.yaml":       {rbacKube_rbac_proxy_bindingYaml, map[string]*bintree{}},
+		"kube_rbac_proxy_role.yaml":          {rbacKube_rbac_proxy_roleYaml, map[string]*bintree{}},
 		"node_privileged_binding.yaml":       {rbacNode_privileged_bindingYaml, map[string]*bintree{}},
 		"privileged_role.yaml":               {rbacPrivileged_roleYaml, map[string]*bintree{}},
+		"prometheus_role.yaml":               {rbacPrometheus_roleYaml, map[string]*bintree{}},
+		"prometheus_rolebinding.yaml":        {rbacPrometheus_rolebindingYaml, map[string]*bintree{}},
 		"provisioner_binding.yaml":           {rbacProvisioner_bindingYaml, map[string]*bintree{}},
 		"provisioner_role.yaml":              {rbacProvisioner_roleYaml, map[string]*bintree{}},
 		"snapshotter_binding.yaml":           {rbacSnapshotter_bindingYaml, map[string]*bintree{}},
 		"snapshotter_role.yaml":              {rbacSnapshotter_roleYaml, map[string]*bintree{}},
 	}},
+	"service.yaml":        {serviceYaml, map[string]*bintree{}},
+	"servicemonitor.yaml": {servicemonitorYaml, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory

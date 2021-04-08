@@ -96,6 +96,7 @@ spec:
             - --csi-address=$(ADDRESS)
             - --feature-gates=Topology=true
             - --v=${LOG_LEVEL}
+            - --http-endpoint=localhost:8202
             - --timeout=120s
           env:
             - name: ADDRESS
@@ -107,6 +108,28 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          # kube-rbac-proxy for external-provisioner container.
+          # Provides https proxy for http-based external-provisioner metrics.
+        - name: provisioner-kube-rbac-proxy
+          args:
+          - --secure-listen-address=0.0.0.0:9202
+          - --upstream=http://127.0.0.1:8202/
+          - --tls-cert-file=/etc/tls/private/tls.crt
+          - --tls-private-key-file=/etc/tls/private/tls.key
+          - --logtostderr=true
+          image: ${KUBE_RBAC_PROXY_IMAGE}
+          imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 9202
+            name: provisioner-m
+            protocol: TCP
+          resources:
+            requests:
+              memory: 20Mi
+              cpu: 10m
+          volumeMounts:
+          - mountPath: /etc/tls/private
+            name: metrics-serving-cert
         - name: csi-snapshotter
           image: ${SNAPSHOTTER_IMAGE}
           resources:
@@ -115,6 +138,7 @@ spec:
               cpu: 10m
           args:
             - --csi-address=$(ADDRESS)
+            - --metrics-address=localhost:8203
             - --v=${LOG_LEVEL}
           env:
           - name: ADDRESS
@@ -126,6 +150,26 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+        - name: snapshotter-kube-rbac-proxy
+          args:
+          - --secure-listen-address=0.0.0.0:9203
+          - --upstream=http://127.0.0.1:8203/
+          - --tls-cert-file=/etc/tls/private/tls.crt
+          - --tls-private-key-file=/etc/tls/private/tls.key
+          - --logtostderr=true
+          image: ${KUBE_RBAC_PROXY_IMAGE}
+          imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 9203
+            name: snapshotter-m
+            protocol: TCP
+          resources:
+            requests:
+              memory: 20Mi
+              cpu: 10m
+          volumeMounts:
+          - mountPath: /etc/tls/private
+            name: metrics-serving-cert
       volumes:
         - name: socket-dir
           emptyDir: {}
@@ -141,3 +185,6 @@ spec:
             - key: ca-bundle.pem
               path: ca-bundle.pem
             optional: true
+        - name: metrics-serving-cert
+          secret:
+            secretName: manila-csi-driver-controller-metrics-serving-cert
