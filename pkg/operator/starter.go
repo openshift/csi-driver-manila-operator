@@ -12,6 +12,7 @@ import (
 	"github.com/openshift/csi-driver-manila-operator/pkg/generated"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
 	"github.com/openshift/library-go/pkg/operator/resourcesynccontroller"
+	"k8s.io/client-go/dynamic"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
@@ -52,6 +53,11 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		return err
 	}
 
+	dynamicClient, err := dynamic.NewForConfig(controllerConfig.KubeConfig)
+	if err != nil {
+		return err
+	}
+
 	csiDriverControllerSet := csicontrollerset.NewCSIControllerSet(
 		operatorClient,
 		controllerConfig.EventRecorder,
@@ -68,6 +74,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			"csidriver.yaml",
 			"controller_sa.yaml",
 			"node_sa.yaml",
+			"service.yaml",
 			"rbac/snapshotter_binding.yaml",
 			"rbac/snapshotter_role.yaml",
 			"rbac/provisioner_binding.yaml",
@@ -75,6 +82,10 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			"rbac/privileged_role.yaml",
 			"rbac/controller_privileged_binding.yaml",
 			"rbac/node_privileged_binding.yaml",
+			"rbac/kube_rbac_proxy_role.yaml",
+			"rbac/kube_rbac_proxy_binding.yaml",
+			"rbac/prometheus_role.yaml",
+			"rbac/prometheus_rolebinding.yaml",
 		},
 	).WithCSIConfigObserverController(
 		"ManilaDriverCSIConfigObserverController",
@@ -94,6 +105,11 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
 		csidrivernodeservicecontroller.WithObservedProxyDaemonSetHook(),
+	).WithServiceMonitorController(
+		"ManilaDriverServiceMonitorController",
+		dynamicClient,
+		generated.Asset,
+		"servicemonitor.yaml",
 	).WithExtraInformers(configInformers.Config().V1().Proxies().Informer())
 
 	nfsCSIDriverController := csidrivernodeservicecontroller.NewCSIDriverNodeServiceController(
