@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: manila-csi-driver-controller-monitor
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 spec:
   endpoints:
   - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -12,7 +12,7 @@ spec:
     scheme: https
     tlsConfig:
       caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
-      serverName: manila-csi-driver-controller-metrics.openshift-cluster-csi-drivers.svc
+      serverName: manila-csi-driver-controller-metrics.openshift-manila-csi-driver.svc
   - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
     interval: 30s
     path: /metrics
@@ -20,7 +20,7 @@ spec:
     scheme: https
     tlsConfig:
       caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
-      serverName: manila-csi-driver-controller-metrics.openshift-cluster-csi-drivers.svc
+      serverName: manila-csi-driver-controller-metrics.openshift-manila-csi-driver.svc
   jobLabel: component
   selector:
     matchLabels:

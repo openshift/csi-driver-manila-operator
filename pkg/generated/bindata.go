@@ -627,7 +627,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: manila-csi-driver-controller-sa
-    namespace: openshift-cluster-csi-drivers
+    namespace: openshift-manila-csi-driver
 roleRef:
   kind: ClusterRole
   name: manila-kube-rbac-proxy-role
@@ -738,7 +738,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: manila-csi-driver-prometheus
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 rules:
 - apiGroups:
   - ""
@@ -772,7 +772,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: manila-csi-driver-prometheus
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -962,7 +962,7 @@ metadata:
   labels:
     app: manila-csi-driver-controller-metrics
   name: manila-csi-driver-controller-metrics
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 spec:
   ports:
   - name: provisioner-m
@@ -998,7 +998,7 @@ var _servicemonitorYaml = []byte(`apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: manila-csi-driver-controller-monitor
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 spec:
   endpoints:
   - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -1008,7 +1008,7 @@ spec:
     scheme: https
     tlsConfig:
       caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
-      serverName: manila-csi-driver-controller-metrics.openshift-cluster-csi-drivers.svc
+      serverName: manila-csi-driver-controller-metrics.openshift-manila-csi-driver.svc
   - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
     interval: 30s
     path: /metrics
@@ -1016,7 +1016,7 @@ spec:
     scheme: https
     tlsConfig:
       caFile: /etc/prometheus/configmaps/serving-certs-ca-bundle/service-ca.crt
-      serverName: manila-csi-driver-controller-metrics.openshift-cluster-csi-drivers.svc
+      serverName: manila-csi-driver-controller-metrics.openshift-manila-csi-driver.svc
   jobLabel: component
   selector:
     matchLabels:

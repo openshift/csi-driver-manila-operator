@@ -6,7 +6,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: manila-csi-driver-controller-sa
-    namespace: openshift-cluster-csi-drivers
+    namespace: openshift-manila-csi-driver
 roleRef:
   kind: ClusterRole
   name: manila-kube-rbac-proxy-role
