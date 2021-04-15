@@ -6,7 +6,7 @@ metadata:
   labels:
     app: manila-csi-driver-controller-metrics
   name: manila-csi-driver-controller-metrics
-  namespace: openshift-cluster-csi-drivers
+  namespace: openshift-manila-csi-driver
 spec:
   ports:
   - name: provisioner-m
