@@ -105,6 +105,7 @@ spec:
       containers:
         - name: csi-driver
           image: ${DRIVER_IMAGE}
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: 50Mi
@@ -141,6 +142,7 @@ spec:
         # TODO: fix manila CSI driver not to require NFS driver socket!
         - name: csi-driver-nfs
           image: ${NFS_DRIVER_IMAGE}
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: 20Mi
@@ -163,6 +165,7 @@ spec:
               memory: 50Mi
         - name: csi-provisioner
           image: ${PROVISIONER_IMAGE}
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: 50Mi
@@ -207,6 +210,7 @@ spec:
             name: metrics-serving-cert
         - name: csi-snapshotter
           image: ${SNAPSHOTTER_IMAGE}
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: 50Mi
@@ -386,6 +390,7 @@ spec:
           securityContext:
             privileged: true
           image: ${DRIVER_IMAGE}
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: 50Mi
@@ -425,6 +430,7 @@ spec:
           securityContext:
             privileged: true
           image: ${NODE_DRIVER_REGISTRAR_IMAGE}
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: 20Mi
