@@ -31,6 +31,7 @@ spec:
           securityContext:
             privileged: true
           image: ${DRIVER_IMAGE}
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: 50Mi
@@ -70,6 +71,7 @@ spec:
           securityContext:
             privileged: true
           image: ${NODE_DRIVER_REGISTRAR_IMAGE}
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: 20Mi
