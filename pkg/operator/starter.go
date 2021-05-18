@@ -96,7 +96,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		"controller.yaml",
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
-		nil,
+		configInformers,
 		csidrivercontrollerservicecontroller.WithObservedProxyDeploymentHook(),
 	).WithCSIDriverNodeService(
 		"ManilaDriverNodeServiceController",
