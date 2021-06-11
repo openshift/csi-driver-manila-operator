@@ -1,0 +1,11 @@
+# Test manifest for https://github.com/kubernetes/kubernetes/tree/master/test/e2e/storage/external
+ShortName: manila
+StorageClass:
+  FromName: true
+SnapshotClass:
+  FromName: true
+DriverInfo:
+  Name: manila.csi.openstack.org
+  SupportedSizeRange:
+    Min: 1Gi
+    Max: 16Ti
