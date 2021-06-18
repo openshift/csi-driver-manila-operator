@@ -27,15 +27,6 @@ IMAGE_REGISTRY?=registry.svc.ci.openshift.org
 # It will generate target "image-$(1)" for building the image and binding it as a prerequisite to target "images".
 $(call build-image,csi-driver-manila-operator,$(IMAGE_REGISTRY)/ocp/4.6:csi-driver-manila-operator,./build/Dockerfile.openshift,.)
 
-# generate bindata targets
-# $0 - macro name
-# $1 - target suffix
-# $2 - input dirs
-# $3 - prefix
-# $4 - pkg
-# $5 - output
-$(call add-bindata,generated,./assets/...,assets,generated,pkg/generated/bindata.go)
-
 clean:
 	$(RM) manila-csi-driver-operator
 .PHONY: clean
