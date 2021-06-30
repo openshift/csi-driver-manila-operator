@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/openshift/csi-driver-manila-operator/assets"
 	"github.com/openshift/csi-driver-manila-operator/pkg/controllers/manila"
 	"github.com/openshift/csi-driver-manila-operator/pkg/controllers/secret"
-	"github.com/openshift/csi-driver-manila-operator/pkg/generated"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
 	"github.com/openshift/library-go/pkg/operator/resourcesynccontroller"
 	"k8s.io/client-go/dynamic"
@@ -67,8 +67,9 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 	).WithStaticResourcesController(
 		"ManilaDriverStaticResources",
 		kubeClient,
+		dynamicClient,
 		kubeInformersForNamespaces,
-		generated.Asset,
+		assets.ReadFile,
 		[]string{
 			"namespace.yaml",
 			"csidriver.yaml",
@@ -97,6 +98,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
 		configInformers,
+		nil,
 		csidrivercontrollerservicecontroller.WithObservedProxyDeploymentHook(),
 	).WithCSIDriverNodeService(
 		"ManilaDriverNodeServiceController",
@@ -104,21 +106,27 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		"node.yaml",
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
+		nil,
 		csidrivernodeservicecontroller.WithObservedProxyDaemonSetHook(),
 	).WithServiceMonitorController(
 		"ManilaDriverServiceMonitorController",
 		dynamicClient,
-		generated.Asset,
+		assets.ReadFile,
 		"servicemonitor.yaml",
-	).WithExtraInformers(configInformers.Config().V1().Proxies().Informer())
+	)
 
+	dsBytes, err := assetWithNFSDriver("node_nfs.yaml")
+	if err != nil {
+		return err
+	}
 	nfsCSIDriverController := csidrivernodeservicecontroller.NewCSIDriverNodeServiceController(
 		"NFSDriverNodeServiceController",
-		assetWithNFSDriver("node_nfs.yaml"),
+		dsBytes,
+		controllerConfig.EventRecorder,
 		operatorClient,
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace).Apps().V1().DaemonSets(),
-		controllerConfig.EventRecorder,
+		nil,
 	)
 
 	// sync config map with OpenStack CA certificate to the operand namespace,
@@ -184,11 +192,14 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 // Manila needs to replace two of them: Manila driver and NFS driver image.
 // Let the Manila image be replaced by CSIDriverController and NFS in this
 // custom asset loading func.
-func assetWithNFSDriver(file string) []byte {
-	asset := generated.MustAsset(file)
+func assetWithNFSDriver(file string) ([]byte, error) {
+	asset, err := assets.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
 	nfsImage := os.Getenv(nfsImageEnvName)
 	if nfsImage == "" {
-		return asset
+		return asset, nil
 	}
-	return bytes.ReplaceAll(asset, []byte("${NFS_DRIVER_IMAGE}"), []byte(nfsImage))
+	return bytes.ReplaceAll(asset, []byte("${NFS_DRIVER_IMAGE}"), []byte(nfsImage)), nil
 }
