@@ -14,3 +14,20 @@ DriverInfo:
   SupportedSizeRange:
     Min: 1Gi
     Max: 16Ti
+  SupportedFsType:
+    xfs: {}
+    ext4: {}
+  SupportedMountOption:
+    dirsync: {}
+  TopologyKeys: ["topology.manila.csi.openstack.org/zone"]
+  Capabilities:
+    persistence: true
+    fsGroup: true
+    block: true
+    exec: true
+    volumeLimits: false
+    controllerExpansion: true
+    nodeExpansion: true
+    snapshotDataSource: true
+    topology: true
+    multipods: true
