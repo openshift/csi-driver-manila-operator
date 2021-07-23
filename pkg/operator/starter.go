@@ -25,7 +25,6 @@ import (
 	"github.com/openshift/library-go/pkg/operator/csi/csidrivercontrollerservicecontroller"
 	"github.com/openshift/library-go/pkg/operator/csi/csidrivernodeservicecontroller"
 
-	// csidrivercontroller "github.com/openshift/library-go/pkg/operator/csi/csidrivercontroller"
 	goc "github.com/openshift/library-go/pkg/operator/genericoperatorclient"
 	"github.com/openshift/library-go/pkg/operator/v1helpers"
 )
@@ -76,6 +75,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			"controller_sa.yaml",
 			"node_sa.yaml",
 			"service.yaml",
+			"volumesnapshotclass.yaml",
 			"rbac/snapshotter_binding.yaml",
 			"rbac/snapshotter_role.yaml",
 			"rbac/provisioner_binding.yaml",
