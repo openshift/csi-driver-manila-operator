@@ -3,7 +3,6 @@ module github.com/openshift/csi-driver-manila-operator
 go 1.16
 
 require (
-	github.com/go-bindata/go-bindata v3.1.2+incompatible
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gophercloud/gophercloud v0.6.1-0.20191122030953-d8ac278c1c9d
 	github.com/gophercloud/utils v0.0.0-20200508015959-b0167b94122c

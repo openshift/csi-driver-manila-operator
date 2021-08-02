@@ -6,7 +6,6 @@ include $(addprefix ./vendor/github.com/openshift/build-machinery-go/make/, \
 	golang.mk \
 	targets/openshift/deps-gomod.mk \
 	targets/openshift/images.mk \
-	targets/openshift/bindata.mk \
 )
 
 # Run core verification and all self contained tests.
