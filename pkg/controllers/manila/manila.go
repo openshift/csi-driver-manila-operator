@@ -18,6 +18,7 @@ import (
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	storagelisters "k8s.io/client-go/listers/storage/v1"
 	"k8s.io/klog/v2"
@@ -125,7 +126,10 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 	if !c.controllersRunning {
 		klog.V(4).Infof("Starting CSI driver controllers")
 		for _, ctrl := range c.csiControllers {
-			go ctrl.Run(ctx, 1)
+			go func(ctrl Runnable) {
+				defer utilruntime.HandleCrash()
+				ctrl.Run(ctx, 1)
+			}(ctrl)
 		}
 		c.controllersRunning = true
 	}
