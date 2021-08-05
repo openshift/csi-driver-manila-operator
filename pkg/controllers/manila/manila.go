@@ -125,12 +125,11 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 	// Manila has some shares: start the actual CSI driver controller sets
 	if !c.controllersRunning {
 		klog.V(4).Infof("Starting CSI driver controllers")
-		for i := range c.csiControllers {
-			ctrl := c.csiControllers[i]
-			go func() {
+		for _, ctrl := range c.csiControllers {
+			go func(ctrl Runnable) {
 				defer utilruntime.HandleCrash()
 				ctrl.Run(ctx, 1)
-			}()
+			}(ctrl)
 		}
 		c.controllersRunning = true
 	}
