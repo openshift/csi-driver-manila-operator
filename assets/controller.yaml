@@ -10,7 +10,11 @@ spec:
     matchLabels:
       app: openstack-manila-csi
       component: controllerplugin
-  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
   template:
     metadata:
       labels:
@@ -27,6 +31,16 @@ spec:
         - key: node-role.kubernetes.io/master
           operator: Exists
           effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: openstack-manila-csi
+                    component: controllerplugin
+                topologyKey: kubernetes.io/hostname
       containers:
         - name: csi-driver
           image: ${DRIVER_IMAGE}
@@ -101,6 +115,7 @@ spec:
             - --feature-gates=Topology=true
             - --v=${LOG_LEVEL}
             - --http-endpoint=localhost:8202
+            - --leader-election
             - --timeout=120s
           env:
             - name: ADDRESS
@@ -144,6 +159,7 @@ spec:
           args:
             - --csi-address=$(ADDRESS)
             - --metrics-address=localhost:8203
+            - --leader-election
             - --v=${LOG_LEVEL}
           env:
           - name: ADDRESS
