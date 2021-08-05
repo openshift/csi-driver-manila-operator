@@ -142,7 +142,7 @@ func (c *ManilaController) syncStorageClasses(ctx context.Context, shareTypes []
 	for _, shareType := range shareTypes {
 		klog.V(4).Infof("Syncing storage class for shareType type %s", shareType.Name)
 		sc := c.generateStorageClass(shareType)
-		_, _, err := resourceapply.ApplyStorageClass(c.kubeClient.StorageV1(), c.eventRecorder, sc)
+		_, _, err := resourceapply.ApplyStorageClass(ctx, c.kubeClient.StorageV1(), c.eventRecorder, sc)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -151,7 +151,7 @@ func (c *ManilaController) syncStorageClasses(ctx context.Context, shareTypes []
 }
 
 func (c *ManilaController) applyStorageClass(ctx context.Context, expected *storagev1.StorageClass) error {
-	_, _, err := resourceapply.ApplyStorageClass(c.kubeClient.StorageV1(), c.eventRecorder, expected)
+	_, _, err := resourceapply.ApplyStorageClass(ctx, c.kubeClient.StorageV1(), c.eventRecorder, expected)
 	return err
 }
 
