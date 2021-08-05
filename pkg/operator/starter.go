@@ -75,6 +75,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			"namespace.yaml",
 			"csidriver.yaml",
 			"controller_sa.yaml",
+			"controller_pdb.yaml",
 			"node_sa.yaml",
 			"service.yaml",
 			"volumesnapshotclass.yaml",
