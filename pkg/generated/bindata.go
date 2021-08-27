@@ -313,6 +313,10 @@ spec:
     matchLabels:
       app: openstack-manila-csi
       component: nodeplugin
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 10%
   template:
     metadata:
       labels:
@@ -446,6 +450,10 @@ spec:
     matchLabels:
       app: openstack-manila-csi
       component: nfs-nodeplugin
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 10%
   template:
     metadata:
       labels:
