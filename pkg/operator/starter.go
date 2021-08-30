@@ -72,7 +72,6 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeInformersForNamespaces,
 		assets.ReadFile,
 		[]string{
-			"namespace.yaml",
 			"csidriver.yaml",
 			"controller_sa.yaml",
 			"controller_pdb.yaml",
