@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/client-go/informers/core/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 
+	configv1 "github.com/openshift/api/config/v1"
 	opv1 "github.com/openshift/api/operator/v1"
 	configinformers "github.com/openshift/client-go/config/informers/externalversions"
 	"github.com/openshift/library-go/pkg/operator/csi/csiconfigobservercontroller"
@@ -157,6 +158,38 @@ func WithPlaceholdersHook(configInformer configinformers.SharedInformerFactory) 
 		logLevel := loglevel.LogLevelToVerbosity(spec.LogLevel)
 		pairs = append(pairs, []string{"${LOG_LEVEL}", strconv.Itoa(logLevel)}...)
 
+		replaced := strings.NewReplacer(pairs...).Replace(string(manifest))
+		return []byte(replaced), nil
+	}
+}
+
+// WithControlPlaneTopologyHook modifies the nodeSelector of the deployment
+// based on the control plane topology reported in Infrastructure.Status.ControlPlaneTopology.
+// If running with an External control plane, the nodeSelector should not include
+// master nodes.
+func WithControlPlaneTopologyHook(configInformer configinformers.SharedInformerFactory) dc.DeploymentHookFunc {
+	return func(_ *opv1.OperatorSpec, deployment *appsv1.Deployment) error {
+		infra, err := configInformer.Config().V1().Infrastructures().Lister().Get(infraConfigName)
+		if err != nil {
+			return err
+		}
+		if infra.Status.ControlPlaneTopology == configv1.ExternalTopologyMode {
+			deployment.Spec.Template.Spec.NodeSelector = map[string]string{}
+		}
+		return nil
+	}
+}
+
+// WithLeaderElectionReplacerHook modifies ${LEADER_ELECTION_*} parameters in a yaml file with
+// OpenShift's recommended values.
+func WithLeaderElectionReplacerHook(defaults configv1.LeaderElection) dc.ManifestHookFunc {
+	return func(spec *opv1.OperatorSpec, manifest []byte) ([]byte, error) {
+		pairs := []string{
+			// truncate to int() to avoid long floats ("137.000000s")
+			"${LEADER_ELECTION_LEASE_DURATION}", fmt.Sprintf("%ds", int(defaults.LeaseDuration.Seconds())),
+			"${LEADER_ELECTION_RENEW_DEADLINE}", fmt.Sprintf("%ds", int(defaults.RenewDeadline.Seconds())),
+			"${LEADER_ELECTION_RETRY_PERIOD}", fmt.Sprintf("%ds", int(defaults.RetryPeriod.Seconds())),
+		}
 		replaced := strings.NewReplacer(pairs...).Replace(string(manifest))
 		return []byte(replaced), nil
 	}
