@@ -142,7 +142,10 @@ func (c *ManilaController) applyStorageClass(ctx context.Context, expected *stor
 }
 
 func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) *storagev1.StorageClass {
-	storageClassName := util.StorageClassNamePrefix + strings.ToLower(shareType.Name)
+	/* As per RFC 1123 the storage class name must consist of lower case alphanumeric character,  '-' or '.'
+	   and must start and end with an alphanumeric character.
+	*/
+	storageClassName := util.StorageClassNamePrefix + strings.ToLower(strings.Replace(shareType.Name, "_", "-", -1))
 	delete := corev1.PersistentVolumeReclaimDelete
 	immediate := storagev1.VolumeBindingImmediate
 	sc := &storagev1.StorageClass{
