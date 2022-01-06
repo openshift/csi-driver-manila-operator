@@ -97,12 +97,12 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 
 	shareTypes, err := c.openStackClient.GetShareTypes()
 	if err != nil {
-		return c.setDisabledCondition(fmt.Sprintf("Unable to retrieve Manila share types: %v", err))
+		return c.setDisabledCondition(ctx, fmt.Sprintf("Unable to retrieve Manila share types: %v", err))
 	}
 
 	if len(shareTypes) == 0 {
 		klog.V(4).Infof("Manila does not provide any share types")
-		return c.setDisabledCondition("Manila does not provide any share types")
+		return c.setDisabledCondition(ctx, "Manila does not provide any share types")
 	}
 	// Manila has some shares: start the actual CSI driver controller sets
 	if !c.controllersRunning {
@@ -120,7 +120,7 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 		return err
 	}
 
-	return c.setEnabledCondition()
+	return c.setEnabledCondition(ctx)
 }
 
 func (c *ManilaController) syncStorageClasses(ctx context.Context, shareTypes []sharetypes.ShareType) error {
@@ -168,15 +168,16 @@ func (c *ManilaController) generateStorageClass(shareType sharetypes.ShareType) 
 	return sc
 }
 
-func (c *ManilaController) setEnabledCondition() error {
+func (c *ManilaController) setEnabledCondition(ctx context.Context) error {
 	_, _, err := v1helpers.UpdateStatus(
+		ctx,
 		c.operatorClient,
 		removeConditionFn(operatorConditionPrefix+"Disabled"),
 	)
 	return err
 }
 
-func (c *ManilaController) setDisabledCondition(msg string) error {
+func (c *ManilaController) setDisabledCondition(ctx context.Context, msg string) error {
 	disabledCnd := operatorv1.OperatorCondition{
 		Type:    operatorConditionPrefix + "Disabled",
 		Status:  operatorv1.ConditionTrue,
@@ -184,6 +185,7 @@ func (c *ManilaController) setDisabledCondition(msg string) error {
 		Message: msg,
 	}
 	_, _, err := v1helpers.UpdateStatus(
+		ctx,
 		c.operatorClient,
 		v1helpers.UpdateConditionFn(disabledCnd),
 	)
