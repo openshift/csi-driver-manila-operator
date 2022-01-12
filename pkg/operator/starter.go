@@ -31,8 +31,9 @@ import (
 )
 
 const (
-	operandName  = "manila-csi-driver"
-	operatorName = "manila-csi-driver-operator"
+	operandName        = "manila-csi-driver"
+	operatorName       = "manila-csi-driver-operator"
+	trustedCAConfigMap = "manila-csi-driver-trusted-ca-bundle"
 
 	nfsImageEnvName = "NFS_DRIVER_IMAGE"
 
@@ -42,6 +43,7 @@ const (
 func RunOperator(ctx context.Context, controllerConfig *controllercmd.ControllerContext) error {
 	kubeClient := kubeclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
 	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperatorNamespace, util.OperandNamespace, util.CloudConfigNamespace, "")
+	configMapInformer := kubeInformersForNamespaces.InformersFor(util.OperandNamespace).Core().V1().ConfigMaps()
 	nodeInformer := kubeInformersForNamespaces.InformersFor("").Core().V1().Nodes()
 
 	configClient := configclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
@@ -77,6 +79,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			"controller_pdb.yaml",
 			"node_sa.yaml",
 			"service.yaml",
+			"cabundle_cm.yaml",
 			"volumesnapshotclass.yaml",
 			"rbac/snapshotter_binding.yaml",
 			"rbac/snapshotter_role.yaml",
@@ -100,8 +103,15 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
 		configInformers,
-		[]factory.Informer{nodeInformer.Informer()},
+		[]factory.Informer{
+			nodeInformer.Informer(),
+			configMapInformer.Informer()},
 		csidrivercontrollerservicecontroller.WithObservedProxyDeploymentHook(),
+		csidrivercontrollerservicecontroller.WithCABundleDeploymentHook(
+			util.OperandNamespace,
+			trustedCAConfigMap,
+			configMapInformer,
+		),
 		csidrivercontrollerservicecontroller.WithReplicasHook(nodeInformer.Lister()),
 	).WithCSIDriverNodeService(
 		"ManilaDriverNodeServiceController",
@@ -111,6 +121,11 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
 		nil,
 		csidrivernodeservicecontroller.WithObservedProxyDaemonSetHook(),
+		csidrivernodeservicecontroller.WithCABundleDaemonSetHook(
+			util.OperandNamespace,
+			trustedCAConfigMap,
+			configMapInformer,
+		),
 	).WithServiceMonitorController(
 		"ManilaDriverServiceMonitorController",
 		dynamicClient,
@@ -129,7 +144,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		operatorClient,
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace).Apps().V1().DaemonSets(),
-		nil,
+		[]factory.Informer{configMapInformer.Informer()},
 	)
 
 	// sync config map with OpenStack CA certificate to the operand namespace,
