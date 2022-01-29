@@ -1,9 +1,9 @@
-FROM registry.ci.openshift.org/ocp/builder:rhel-8-golang-1.17-openshift-4.10
+FROM registry.ci.openshift.org/ocp/builder:rhel-8-golang-1.17-openshift-4.11
 COPY . /go/src/github.com/openshift/csi-driver-manila-operator
 RUN cd /go/src/github.com/openshift/csi-driver-manila-operator && \
     go build -mod vendor -o csi-driver-manila-operator cmd/csi-driver-manila-operator/main.go
 
-FROM registry.ci.openshift.org/ocp/4.10:base
+FROM registry.ci.openshift.org/ocp/4.11:base
 
 ENV OPERATOR=/usr/local/bin/csi-driver-manila-operator \
     USER_UID=1001 \
