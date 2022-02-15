@@ -14,3 +14,14 @@ DriverInfo:
   SupportedSizeRange:
     Min: 1Gi
     Max: 16Ti
+  Capabilities:
+    persistence: true
+    # our CI uses CephFS / NFS driver, which doesn't support fsgroups.
+    fsGroup: false
+    exec: true
+    # our CI uses CephFS / NFS driver, which doesn't support snapshots.
+    # The driver supports snapshots in the wallaby release of OpenStack
+    # Manila with Ceph Octopus+.
+    snapshotDataSource: false
+    multipods: true
+    RWX: true
