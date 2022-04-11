@@ -38,6 +38,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: CSI_FSGROUP_POLICY
+          value: None
         image: quay.io/openshift/origin-csi-driver-manila-operator:latest
         imagePullPolicy: IfNotPresent
         name: manila-csi-driver-operator

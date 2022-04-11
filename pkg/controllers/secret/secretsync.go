@@ -34,7 +34,6 @@ const (
 	// Name of key with clouds.yaml in Secret provided by cloud-credentials-operator.
 	cloudSecretKey = "clouds.yaml"
 	// Name of OpenStack in clouds.yaml
-	cloudName = "openstack"
 	// Canonical path for custom ca certificates
 	cacertPath = "/etc/kubernetes/static-pod-resources/configmaps/cloud-config/ca-bundle.pem"
 )
@@ -103,9 +102,9 @@ func (c *SecretSyncController) translateSecret(cloudSecret *v1.Secret) (*v1.Secr
 		return nil, fmt.Errorf("failed to unmarshal clouds credentials stored in secret %s: %s", util.CloudCredentialSecretName, err)
 	}
 
-	cloud, ok := clouds.Clouds[cloudName]
+	cloud, ok := clouds.Clouds[util.CloudName]
 	if !ok {
-		return nil, fmt.Errorf("failed to parse clouds credentials stored in secret %s: cloud %s not found", util.CloudCredentialSecretName, cloudName)
+		return nil, fmt.Errorf("failed to parse clouds credentials stored in secret %s: cloud %s not found", util.CloudCredentialSecretName, util.CloudName)
 	}
 
 	data := cloudToConf(cloud)
