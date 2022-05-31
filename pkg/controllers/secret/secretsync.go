@@ -108,6 +108,21 @@ func (c *SecretSyncController) translateSecret(cloudSecret *v1.Secret) (*v1.Secr
 		return nil, fmt.Errorf("failed to parse clouds credentials stored in secret %s: cloud %s not found", util.CloudCredentialSecretName, cloudName)
 	}
 
+	data := cloudToConf(cloud)
+
+	secret := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      util.ManilaSecretName,
+			Namespace: util.OperandNamespace,
+		},
+		Type: v1.SecretTypeOpaque,
+		Data: data,
+	}
+
+	return &secret, nil
+}
+
+func cloudToConf(cloud clientconfig.Cloud) map[string][]byte {
 	data := make(map[string][]byte)
 
 	if cloud.AuthInfo.AuthURL != "" {
@@ -123,6 +138,15 @@ func (c *SecretSyncController) translateSecret(cloudSecret *v1.Secret) (*v1.Secr
 	}
 	if cloud.AuthInfo.Password != "" {
 		data["os-password"] = []byte(cloud.AuthInfo.Password)
+	}
+	if cloud.AuthInfo.ApplicationCredentialID != "" {
+		data["os-applicationCredentialID"] = []byte(cloud.AuthInfo.ApplicationCredentialID)
+	}
+	if cloud.AuthInfo.ApplicationCredentialName != "" {
+		data["os-applicationCredentialName"] = []byte(cloud.AuthInfo.ApplicationCredentialName)
+	}
+	if cloud.AuthInfo.ApplicationCredentialSecret != "" {
+		data["os-applicationCredentialSecret"] = []byte(cloud.AuthInfo.ApplicationCredentialSecret)
 	}
 	if cloud.AuthInfo.ProjectID != "" {
 		data["os-projectID"] = []byte(cloud.AuthInfo.ProjectID)
@@ -151,14 +175,5 @@ func (c *SecretSyncController) translateSecret(cloudSecret *v1.Secret) (*v1.Secr
 		data["os-certAuthorityPath"] = []byte(cacertPath)
 	}
 
-	secret := v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      util.ManilaSecretName,
-			Namespace: util.OperandNamespace,
-		},
-		Type: v1.SecretTypeOpaque,
-		Data: data,
-	}
-
-	return &secret, nil
+	return data
 }
