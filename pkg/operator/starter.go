@@ -74,12 +74,12 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeInformersForNamespaces,
 		assets.ReadFile,
 		[]string{
-			"controller_sa.yaml",
-			"controller_pdb.yaml",
-			"node_sa.yaml",
-			"service.yaml",
-			"cabundle_cm.yaml",
-			"volumesnapshotclass.yaml",
+			// Create RBAC before creating Service Accounts.
+			// This prevents a race where the controller/node can
+			// try to create pods before the RBAC has been loaded,
+			// leading to an initial admission failure. We avoid
+			// this by exploiting the fact that the pods cannot be
+			// scheduled until the SA has been created.
 			"rbac/snapshotter_binding.yaml",
 			"rbac/snapshotter_role.yaml",
 			"rbac/provisioner_binding.yaml",
@@ -91,6 +91,12 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			"rbac/kube_rbac_proxy_binding.yaml",
 			"rbac/prometheus_role.yaml",
 			"rbac/prometheus_rolebinding.yaml",
+			"controller_sa.yaml",
+			"controller_pdb.yaml",
+			"node_sa.yaml",
+			"service.yaml",
+			"cabundle_cm.yaml",
+			"volumesnapshotclass.yaml",
 		},
 	).WithCSIConfigObserverController(
 		"ManilaDriverCSIConfigObserverController",
