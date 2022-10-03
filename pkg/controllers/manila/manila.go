@@ -27,12 +27,12 @@ import (
 )
 
 // This ManilaController watches OpenStack and:
-// 1) Installs Manila CSI drivers (Manila itself, NFS) once
-//    it detects that there is Manila present (by running provided
-//    manilaOperatorSet).
-// 2) Creates StorageClass for each share type provided by Manila.
-// 3) If there is no Manila in the OpenStack where the cluster runs,
-//    it marks the operator with condition Disabled=true.
+//  1. Installs Manila CSI drivers (Manila itself, NFS) once
+//     it detects that there is Manila present (by running provided
+//     manilaOperatorSet).
+//  2. Creates StorageClass for each share type provided by Manila.
+//  3. If there is no Manila in the OpenStack where the cluster runs,
+//     it marks the operator with condition Disabled=true.
 //
 // Note that the CSI driver(s) are not un-installed when Manila becomes
 // missing or it stops providing shares of given type - Manila bight be
