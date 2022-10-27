@@ -12,6 +12,8 @@ import (
 	"github.com/openshift/csi-driver-manila-operator/pkg/controllers/secret"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
 	"github.com/openshift/library-go/pkg/operator/resourcesynccontroller"
+	apiextclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -45,6 +47,12 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperatorNamespace, util.OperandNamespace, util.CloudConfigNamespace, "")
 	configMapInformer := kubeInformersForNamespaces.InformersFor(util.OperandNamespace).Core().V1().ConfigMaps()
 	nodeInformer := kubeInformersForNamespaces.InformersFor("").Core().V1().Nodes()
+
+	// Create apiextension client. This is used to verify is a VolumeSnapshotClass CRD exists.
+	apiExtClient, err := apiextclient.NewForConfig(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
+	if err != nil {
+		return err
+	}
 
 	configClient := configclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
 	configInformers := configinformers.NewSharedInformerFactory(configClient, resync)
@@ -96,7 +104,25 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			"node_sa.yaml",
 			"service.yaml",
 			"cabundle_cm.yaml",
+		},
+	).WithConditionalStaticResourcesController(
+		"ManilaDriverConditionalStaticResourcesController",
+		kubeClient,
+		dynamicClient,
+		kubeInformersForNamespaces,
+		assets.ReadFile,
+		[]string{
 			"volumesnapshotclass.yaml",
+		},
+		// Only install when CRD exists.
+		func() bool {
+			name := "volumesnapshotclasses.snapshot.storage.k8s.io"
+			_, err := apiExtClient.ApiextensionsV1().CustomResourceDefinitions().Get(context.TODO(), name, metav1.GetOptions{})
+			return err == nil
+		},
+		// Don't ever remove.
+		func() bool {
+			return false
 		},
 	).WithCSIConfigObserverController(
 		"ManilaDriverCSIConfigObserverController",
