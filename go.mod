@@ -8,11 +8,12 @@ require (
 	github.com/openshift/api v0.0.0-20220919112502-5eaf4250c423
 	github.com/openshift/build-machinery-go v0.0.0-20220913142420-e25cf57ea46d
 	github.com/openshift/client-go v0.0.0-20220915152853-9dfefb19db2e
-	github.com/openshift/library-go v0.0.0-20221021005159-d93563844063
+	github.com/openshift/library-go v0.0.0-20221101173919-2b70f05de50e
 	github.com/prometheus/client_golang v1.12.2
 	github.com/spf13/cobra v1.4.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.25.1
+	k8s.io/apiextensions-apiserver v0.25.0
 	k8s.io/apimachinery v0.25.1
 	k8s.io/client-go v0.25.1
 	k8s.io/component-base v0.25.1
@@ -97,7 +98,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.25.0 // indirect
 	k8s.io/apiserver v0.25.0 // indirect
 	k8s.io/kube-aggregator v0.25.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 // indirect
