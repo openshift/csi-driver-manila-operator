@@ -64,6 +64,10 @@ spec:
               mountPath: /var/lib/kubelet/plugins/csi-nfsplugin
             - name: cacert
               mountPath: /etc/kubernetes/static-pod-resources/configmaps/cloud-config
+            - name: etc-selinux
+              mountPath: /etc/selinux
+            - name: sys-fs
+              mountPath: /sys/fs
           resources:
             requests:
               cpu: 10m
@@ -123,3 +127,11 @@ spec:
             - key: ca-bundle.pem
               path: ca-bundle.pem
             optional: true
+        - name: etc-selinux
+          hostPath:
+            path: /etc/selinux
+            type: DirectoryOrCreate
+        - name: sys-fs
+          hostPath:
+            path: /sys/fs
+            type: Directory
