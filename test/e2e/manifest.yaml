@@ -25,3 +25,4 @@ DriverInfo:
     snapshotDataSource: false
     multipods: true
     RWX: true
+    multiplePVsSameID: true
