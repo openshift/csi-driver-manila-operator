@@ -1,6 +1,6 @@
 module github.com/openshift/csi-driver-manila-operator
 
-go 1.18
+go 1.19
 
 require (
 	github.com/gophercloud/gophercloud v0.6.1-0.20191122030953-d8ac278c1c9d
