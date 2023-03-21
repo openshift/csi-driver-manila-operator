@@ -109,3 +109,7 @@ require (
 )
 
 replace github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt v3.2.1+incompatible
+
+// Use at least v1.5.1. This replace can be removed once no dependency lists an
+// older version.
+replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.5.1
