@@ -107,3 +107,7 @@ require (
 	sigs.k8s.io/kube-storage-version-migrator v0.0.4 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
+
+// Use at least v1.5.1. This replace can be removed once no dependency lists an
+// older version.
+replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.5.1
