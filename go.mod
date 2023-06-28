@@ -5,12 +5,12 @@ go 1.19
 require (
 	github.com/gophercloud/gophercloud v0.6.1-0.20191122030953-d8ac278c1c9d
 	github.com/gophercloud/utils v0.0.0-20200508015959-b0167b94122c
-	github.com/openshift/api v0.0.0-20230509100629-894b49f57a15
+	github.com/openshift/api v0.0.0-20230613151523-ba04973d3ed1
 	github.com/openshift/build-machinery-go v0.0.0-20230306181456-d321ffa04533
 	github.com/openshift/client-go v0.0.0-20230503144108-75015d2347cb
-	github.com/openshift/library-go v0.0.0-20230508110756-9b7abe2c9cbf
+	github.com/openshift/library-go v0.0.0-20230626162119-954ade536d6d
 	github.com/prometheus/client_golang v1.14.0
-	github.com/spf13/cobra v1.6.0
+	github.com/spf13/cobra v1.6.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.27.1
 	k8s.io/apiextensions-apiserver v0.27.1
