@@ -42,7 +42,6 @@ import (
 type ManilaController struct {
 	operatorClient     v1helpers.OperatorClient
 	kubeClient         kubernetes.Interface
-	openStackClient    *openStackClient
 	storageClassLister storagelisters.StorageClassLister
 	csiDriverLister    storagelisters.CSIDriverLister
 	// Controllers to start when Manila is detected
@@ -68,7 +67,6 @@ func NewManilaController(
 	operatorClient v1helpers.OperatorClient,
 	kubeClient kubernetes.Interface,
 	informers v1helpers.KubeInformersForNamespaces,
-	openStackClient *openStackClient,
 	csiControllers []Runnable,
 	eventRecorder events.Recorder) factory.Controller {
 
@@ -79,7 +77,6 @@ func NewManilaController(
 		kubeClient:         kubeClient,
 		storageClassLister: scInformer.Lister(),
 		csiDriverLister:    csiInformer.Lister(),
-		openStackClient:    openStackClient,
 		csiControllers:     csiControllers,
 		eventRecorder:      eventRecorder.WithComponentSuffix("ManilaController"),
 	}
@@ -102,7 +99,11 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 		return nil
 	}
 
-	shareTypes, err := c.openStackClient.GetShareTypes()
+	openstackClient, err := NewOpenStackClient(util.CloudConfigFilename)
+	if err != nil {
+		return c.setDisabledCondition(ctx, fmt.Sprintf("Unable to connect to OpenStack: %v", err))
+	}
+	shareTypes, err := openstackClient.GetShareTypes()
 	if err != nil {
 		return c.setDisabledCondition(ctx, fmt.Sprintf("Unable to retrieve Manila share types: %v", err))
 	}
