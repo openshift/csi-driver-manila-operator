@@ -99,11 +99,7 @@ func (c *ManilaController) sync(ctx context.Context, syncCtx factory.SyncContext
 		return nil
 	}
 
-	openstackClient, err := NewOpenStackClient(util.CloudConfigFilename)
-	if err != nil {
-		return c.setDisabledCondition(ctx, fmt.Sprintf("Unable to connect to OpenStack: %v", err))
-	}
-	shareTypes, err := openstackClient.GetShareTypes()
+	shareTypes, err := GetShareTypes()
 	if err != nil {
 		return c.setDisabledCondition(ctx, fmt.Sprintf("Unable to retrieve Manila share types: %v", err))
 	}
