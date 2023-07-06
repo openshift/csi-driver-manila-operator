@@ -45,6 +45,7 @@ const (
 func RunOperator(ctx context.Context, controllerConfig *controllercmd.ControllerContext) error {
 	kubeClient := kubeclient.NewForConfigOrDie(rest.AddUserAgent(controllerConfig.KubeConfig, operatorName))
 	kubeInformersForNamespaces := v1helpers.NewKubeInformersForNamespaces(kubeClient, util.OperatorNamespace, util.OperandNamespace, util.CloudConfigNamespace, "")
+	secretInformer := kubeInformersForNamespaces.InformersFor(util.OperatorNamespace).Core().V1().Secrets()
 	configMapInformer := kubeInformersForNamespaces.InformersFor(util.OperandNamespace).Core().V1().ConfigMaps()
 	nodeInformer := kubeInformersForNamespaces.InformersFor("").Core().V1().Nodes()
 
@@ -137,7 +138,9 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		configInformers,
 		[]factory.Informer{
 			nodeInformer.Informer(),
+			secretInformer.Informer(),
 			configMapInformer.Informer()},
+		csidrivercontrollerservicecontroller.WithSecretHashAnnotationHook(util.OperatorNamespace, util.CloudCredentialSecretName, secretInformer),
 		csidrivercontrollerservicecontroller.WithObservedProxyDeploymentHook(),
 		csidrivercontrollerservicecontroller.WithCABundleDeploymentHook(
 			util.OperandNamespace,
@@ -152,6 +155,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		kubeClient,
 		kubeInformersForNamespaces.InformersFor(util.OperandNamespace),
 		nil,
+		csidrivernodeservicecontroller.WithSecretHashAnnotationHook(util.OperatorNamespace, util.CloudCredentialSecretName, secretInformer),
 		csidrivernodeservicecontroller.WithObservedProxyDaemonSetHook(),
 		csidrivernodeservicecontroller.WithCABundleDaemonSetHook(
 			util.OperandNamespace,
