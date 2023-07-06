@@ -198,11 +198,6 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		return err
 	}
 
-	openstackClient, err := manila.NewOpenStackClient(util.CloudConfigFilename, kubeInformersForNamespaces)
-	if err != nil {
-		return err
-	}
-
 	secretSyncController := secret.NewSecretSyncController(
 		operatorClient,
 		kubeClient,
@@ -214,7 +209,6 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 		operatorClient,
 		kubeClient,
 		kubeInformersForNamespaces,
-		openstackClient,
 		[]manila.Runnable{
 			csiDriverControllerSet,
 			nfsCSIDriverController,
