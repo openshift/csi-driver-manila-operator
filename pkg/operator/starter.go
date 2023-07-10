@@ -88,10 +88,9 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			// leading to an initial admission failure. We avoid
 			// this by exploiting the fact that the pods cannot be
 			// scheduled until the SA has been created.
-			"rbac/snapshotter_binding.yaml",
-			"rbac/snapshotter_role.yaml",
-			"rbac/provisioner_binding.yaml",
-			"rbac/provisioner_role.yaml",
+			"rbac/main_snapshotter_binding.yaml",
+			"rbac/main_provisioner_binding.yaml",
+			"rbac/volumeattachment_reader_provisioner_binding.yaml",
 			"rbac/privileged_role.yaml",
 			"rbac/controller_privileged_binding.yaml",
 			"rbac/node_privileged_binding.yaml",
@@ -99,6 +98,8 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 			"rbac/kube_rbac_proxy_binding.yaml",
 			"rbac/prometheus_role.yaml",
 			"rbac/prometheus_rolebinding.yaml",
+			"rbac/lease_leader_election_role.yaml",
+			"rbac/lease_leader_election_rolebinding.yaml",
 			"controller_sa.yaml",
 			"controller_pdb.yaml",
 			"node_sa.yaml",
