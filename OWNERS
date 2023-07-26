@@ -10,6 +10,6 @@ approvers:
   - stephenfin
   - tombarron
   - tsmetana
-
-component: "Installer"
-subcomponent: "OpenShift on OpenStack"
+  - RomanBednar
+  - mpatlasov
+component: "Storage / Operators"
