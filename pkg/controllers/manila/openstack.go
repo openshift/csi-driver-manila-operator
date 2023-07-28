@@ -14,6 +14,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
+	"github.com/openshift/csi-driver-manila-operator/pkg/version"
 	"sigs.k8s.io/yaml"
 )
 
@@ -50,6 +51,11 @@ func (o *openStackClient) GetShareTypes() ([]sharetypes.ShareType, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a provider client: %w", err)
 	}
+
+	// we represent version using commits since we don't tag releases
+	ua := gophercloud.UserAgent{}
+	ua.Prepend(fmt.Sprintf("csi-driver-manila-operator/%s", version.Get().GitCommit))
+	provider.UserAgent = ua
 
 	cert, err := getCloudProviderCert()
 	if err != nil && !os.IsNotExist(err) {
