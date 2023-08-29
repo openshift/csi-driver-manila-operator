@@ -14,7 +14,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
-	"github.com/openshift/library-go/pkg/operator/v1helpers"
 	"sigs.k8s.io/yaml"
 )
 
@@ -22,10 +21,7 @@ type openStackClient struct {
 	cloud *clientconfig.Cloud
 }
 
-func NewOpenStackClient(
-	cloudConfigFilename string,
-	informers v1helpers.KubeInformersForNamespaces,
-) (*openStackClient, error) {
+func NewOpenStackClient(cloudConfigFilename string) (*openStackClient, error) {
 	cloud, err := getCloudFromFile(cloudConfigFilename)
 	if err != nil {
 		return nil, err
