@@ -21,6 +21,8 @@ spec:
       labels:
         app: openstack-manila-csi
         component: controllerplugin
+      annotations:
+        target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
     spec:
       nodeSelector:
         node-role.kubernetes.io/master: ""
