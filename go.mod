@@ -5,15 +5,15 @@ go 1.20
 require (
 	github.com/gophercloud/gophercloud v1.5.0
 	github.com/gophercloud/utils v0.0.0-20230523080330-de873b9cf00d
-	github.com/openshift/api v0.0.0-20230802190806-ec737413b77a
+	github.com/openshift/api v0.0.0-20231010075512-1ccc6058c62d
 	github.com/openshift/build-machinery-go v0.0.0-20230306181456-d321ffa04533
-	github.com/openshift/client-go v0.0.0-20230718165156-6014fb98e86a
-	github.com/openshift/library-go v0.0.0-20230803043003-e1dfb9bf12bb
+	github.com/openshift/client-go v0.0.0-20230926161409-848405da69e1
+	github.com/openshift/library-go v0.0.0-20231020125034-5a2d9fe760b3
 	github.com/prometheus/client_golang v1.16.0
 	github.com/spf13/cobra v1.7.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.28.3
-	k8s.io/apiextensions-apiserver v0.27.4
+	k8s.io/apiextensions-apiserver v0.28.2
 	k8s.io/apimachinery v0.28.3
 	k8s.io/client-go v0.28.3
 	k8s.io/component-base v0.28.3
@@ -109,9 +109,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiserver v0.28.3 // indirect
 	k8s.io/kms v0.28.3 // indirect
-	k8s.io/kube-aggregator v0.27.4 // indirect
+	k8s.io/kube-aggregator v0.28.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9 // indirect
-	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
+	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.1.2 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kube-storage-version-migrator v0.0.6-0.20230721195810-5c8923c5ff96 // indirect
