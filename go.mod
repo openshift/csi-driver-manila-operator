@@ -5,10 +5,10 @@ go 1.20
 require (
 	github.com/gophercloud/gophercloud v1.5.0
 	github.com/gophercloud/utils v0.0.0-20230523080330-de873b9cf00d
-	github.com/openshift/api v0.0.0-20230802190806-ec737413b77a
+	github.com/openshift/api v0.0.0-20230807132801-600991d550ac
 	github.com/openshift/build-machinery-go v0.0.0-20230306181456-d321ffa04533
 	github.com/openshift/client-go v0.0.0-20230718165156-6014fb98e86a
-	github.com/openshift/library-go v0.0.0-20230803043003-e1dfb9bf12bb
+	github.com/openshift/library-go v0.0.0-20231103161458-0ec67489d123
 	github.com/prometheus/client_golang v1.16.0
 	github.com/spf13/cobra v1.7.0
 	gopkg.in/yaml.v2 v2.4.0
