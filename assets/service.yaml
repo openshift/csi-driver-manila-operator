@@ -18,6 +18,6 @@ spec:
     protocol: TCP
     targetPort: snapshotter-m
   selector:
-    app: manila-csi-driver-controller
+    app: openstack-manila-csi
   sessionAffinity: None
   type: ClusterIP
