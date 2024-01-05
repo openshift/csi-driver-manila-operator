@@ -3,7 +3,6 @@ package operator
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -237,7 +236,7 @@ func RunOperator(ctx context.Context, controllerConfig *controllercmd.Controller
 
 	<-ctx.Done()
 
-	return fmt.Errorf("stopped")
+	return nil
 }
 
 // CSIDriverController can replace only a single driver in driver manifests.
