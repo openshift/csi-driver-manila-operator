@@ -1,6 +1,7 @@
 package gophercloud
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"strings"
@@ -47,7 +48,7 @@ func (client *ServiceClient) ServiceURL(parts ...string) string {
 	return client.ResourceBaseURL() + strings.Join(parts, "/")
 }
 
-func (client *ServiceClient) initReqOpts(url string, JSONBody interface{}, JSONResponse interface{}, opts *RequestOpts) {
+func (client *ServiceClient) initReqOpts(JSONBody interface{}, JSONResponse interface{}, opts *RequestOpts) {
 	if v, ok := (JSONBody).(io.Reader); ok {
 		opts.RawBody = v
 	} else if JSONBody != nil {
@@ -57,68 +58,90 @@ func (client *ServiceClient) initReqOpts(url string, JSONBody interface{}, JSONR
 	if JSONResponse != nil {
 		opts.JSONResponse = JSONResponse
 	}
-
-	if opts.MoreHeaders == nil {
-		opts.MoreHeaders = make(map[string]string)
-	}
-
-	if client.Microversion != "" {
-		client.setMicroversionHeader(opts)
-	}
 }
 
-// Get calls `Request` with the "GET" HTTP verb.
+// GetWithContext calls `Request` with the "GET" HTTP verb.
+func (client *ServiceClient) GetWithContext(ctx context.Context, url string, JSONResponse interface{}, opts *RequestOpts) (*http.Response, error) {
+	if opts == nil {
+		opts = new(RequestOpts)
+	}
+	client.initReqOpts(nil, JSONResponse, opts)
+	return client.RequestWithContext(ctx, "GET", url, opts)
+}
+
+// Get is a compatibility wrapper for GetWithContext.
 func (client *ServiceClient) Get(url string, JSONResponse interface{}, opts *RequestOpts) (*http.Response, error) {
+	return client.GetWithContext(context.Background(), url, JSONResponse, opts)
+}
+
+// PostWithContext calls `Request` with the "POST" HTTP verb.
+func (client *ServiceClient) PostWithContext(ctx context.Context, url string, JSONBody interface{}, JSONResponse interface{}, opts *RequestOpts) (*http.Response, error) {
 	if opts == nil {
 		opts = new(RequestOpts)
 	}
-	client.initReqOpts(url, nil, JSONResponse, opts)
-	return client.Request("GET", url, opts)
+	client.initReqOpts(JSONBody, JSONResponse, opts)
+	return client.RequestWithContext(ctx, "POST", url, opts)
 }
 
-// Post calls `Request` with the "POST" HTTP verb.
+// Post is a compatibility wrapper for PostWithContext.
 func (client *ServiceClient) Post(url string, JSONBody interface{}, JSONResponse interface{}, opts *RequestOpts) (*http.Response, error) {
+	return client.PostWithContext(context.Background(), url, JSONBody, JSONResponse, opts)
+}
+
+// PutWithContext calls `Request` with the "PUT" HTTP verb.
+func (client *ServiceClient) PutWithContext(ctx context.Context, url string, JSONBody interface{}, JSONResponse interface{}, opts *RequestOpts) (*http.Response, error) {
 	if opts == nil {
 		opts = new(RequestOpts)
 	}
-	client.initReqOpts(url, JSONBody, JSONResponse, opts)
-	return client.Request("POST", url, opts)
+	client.initReqOpts(JSONBody, JSONResponse, opts)
+	return client.RequestWithContext(ctx, "PUT", url, opts)
 }
 
-// Put calls `Request` with the "PUT" HTTP verb.
+// Put is a compatibility wrapper for PurWithContext.
 func (client *ServiceClient) Put(url string, JSONBody interface{}, JSONResponse interface{}, opts *RequestOpts) (*http.Response, error) {
+	return client.PutWithContext(context.Background(), url, JSONBody, JSONResponse, opts)
+}
+
+// PatchWithContext calls `Request` with the "PATCH" HTTP verb.
+func (client *ServiceClient) PatchWithContext(ctx context.Context, url string, JSONBody interface{}, JSONResponse interface{}, opts *RequestOpts) (*http.Response, error) {
 	if opts == nil {
 		opts = new(RequestOpts)
 	}
-	client.initReqOpts(url, JSONBody, JSONResponse, opts)
-	return client.Request("PUT", url, opts)
+	client.initReqOpts(JSONBody, JSONResponse, opts)
+	return client.RequestWithContext(ctx, "PATCH", url, opts)
 }
 
-// Patch calls `Request` with the "PATCH" HTTP verb.
+// Patch is a compatibility wrapper for PatchWithContext.
 func (client *ServiceClient) Patch(url string, JSONBody interface{}, JSONResponse interface{}, opts *RequestOpts) (*http.Response, error) {
+	return client.PatchWithContext(context.Background(), url, JSONBody, JSONResponse, opts)
+}
+
+// DeleteWithContext calls `Request` with the "DELETE" HTTP verb.
+func (client *ServiceClient) DeleteWithContext(ctx context.Context, url string, opts *RequestOpts) (*http.Response, error) {
 	if opts == nil {
 		opts = new(RequestOpts)
 	}
-	client.initReqOpts(url, JSONBody, JSONResponse, opts)
-	return client.Request("PATCH", url, opts)
+	client.initReqOpts(nil, nil, opts)
+	return client.RequestWithContext(ctx, "DELETE", url, opts)
 }
 
-// Delete calls `Request` with the "DELETE" HTTP verb.
+// Delete is a compatibility wrapper for DeleteWithContext.
 func (client *ServiceClient) Delete(url string, opts *RequestOpts) (*http.Response, error) {
-	if opts == nil {
-		opts = new(RequestOpts)
-	}
-	client.initReqOpts(url, nil, nil, opts)
-	return client.Request("DELETE", url, opts)
+	return client.DeleteWithContext(context.Background(), url, opts)
 }
 
-// Head calls `Request` with the "HEAD" HTTP verb.
-func (client *ServiceClient) Head(url string, opts *RequestOpts) (*http.Response, error) {
+// HeadWithContext calls `Request` with the "HEAD" HTTP verb.
+func (client *ServiceClient) HeadWithContext(ctx context.Context, url string, opts *RequestOpts) (*http.Response, error) {
 	if opts == nil {
 		opts = new(RequestOpts)
 	}
-	client.initReqOpts(url, nil, nil, opts)
-	return client.Request("HEAD", url, opts)
+	client.initReqOpts(nil, nil, opts)
+	return client.RequestWithContext(ctx, "HEAD", url, opts)
+}
+
+// Head is a compatibility wrapper for HeadWithContext.
+func (client *ServiceClient) Head(url string, opts *RequestOpts) (*http.Response, error) {
+	return client.HeadWithContext(context.Background(), url, opts)
 }
 
 func (client *ServiceClient) setMicroversionHeader(opts *RequestOpts) {
@@ -141,16 +164,30 @@ func (client *ServiceClient) setMicroversionHeader(opts *RequestOpts) {
 }
 
 // Request carries out the HTTP operation for the service client
-func (client *ServiceClient) Request(method, url string, options *RequestOpts) (*http.Response, error) {
+func (client *ServiceClient) RequestWithContext(ctx context.Context, method, url string, options *RequestOpts) (*http.Response, error) {
+	if options.MoreHeaders == nil {
+		options.MoreHeaders = make(map[string]string)
+	}
+
+	if client.Microversion != "" {
+		client.setMicroversionHeader(options)
+	}
+
 	if len(client.MoreHeaders) > 0 {
 		if options == nil {
 			options = new(RequestOpts)
 		}
+
 		for k, v := range client.MoreHeaders {
 			options.MoreHeaders[k] = v
 		}
 	}
-	return client.ProviderClient.Request(method, url, options)
+	return client.ProviderClient.RequestWithContext(ctx, method, url, options)
+}
+
+// Request is a compatibility wrapper for RequestWithContext.
+func (client *ServiceClient) Request(method, url string, options *RequestOpts) (*http.Response, error) {
+	return client.RequestWithContext(context.Background(), method, url, options)
 }
 
 // ParseResponse is a helper function to parse http.Response to constituents.
