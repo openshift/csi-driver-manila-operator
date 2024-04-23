@@ -82,6 +82,7 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          terminationMessagePolicy: FallbackToLogsOnError
         # TODO: fix manila CSI driver not to require NFS driver socket!
         - name: csi-driver-nfs
           image: ${NFS_DRIVER_IMAGE}
@@ -106,6 +107,7 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          terminationMessagePolicy: FallbackToLogsOnError
         - name: csi-provisioner
           image: ${PROVISIONER_IMAGE}
           imagePullPolicy: IfNotPresent
@@ -133,6 +135,7 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          terminationMessagePolicy: FallbackToLogsOnError
           # kube-rbac-proxy for external-provisioner container.
           # Provides https proxy for http-based external-provisioner metrics.
         - name: provisioner-kube-rbac-proxy
@@ -154,6 +157,7 @@ spec:
             requests:
               memory: 20Mi
               cpu: 10m
+          terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
           - mountPath: /etc/tls/private
             name: metrics-serving-cert
@@ -182,6 +186,7 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          terminationMessagePolicy: FallbackToLogsOnError
         - name: snapshotter-kube-rbac-proxy
           args:
           - --secure-listen-address=0.0.0.0:9203
@@ -201,6 +206,7 @@ spec:
             requests:
               memory: 20Mi
               cpu: 10m
+          terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
           - mountPath: /etc/tls/private
             name: metrics-serving-cert

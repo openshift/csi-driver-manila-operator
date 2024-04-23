@@ -76,6 +76,7 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          terminationMessagePolicy: FallbackToLogsOnError
         - name: csi-node-driver-registrar
           securityContext:
             privileged: true
@@ -107,6 +108,7 @@ spec:
             requests:
               cpu: 5m
               memory: 20Mi
+          terminationMessagePolicy: FallbackToLogsOnError
       volumes:
         - name: registration-dir
           hostPath:

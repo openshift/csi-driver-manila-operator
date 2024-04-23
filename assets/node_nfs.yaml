@@ -55,6 +55,7 @@ spec:
               mountPath: /etc/selinux
             - name: sys-fs
               mountPath: /sys/fs
+          terminationMessagePolicy: FallbackToLogsOnError
       volumes:
         - name: plugin-dir
           hostPath:
