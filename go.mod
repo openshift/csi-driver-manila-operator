@@ -2,7 +2,7 @@ module github.com/openshift/csi-driver-manila-operator
 
 go 1.21
 
-toolchain go1.21.3
+toolchain go1.21.7
 
 require (
 	github.com/gophercloud/gophercloud v1.9.0
