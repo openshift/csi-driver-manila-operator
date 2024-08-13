@@ -38,10 +38,6 @@ spec:
             privileged: true
           image: ${DRIVER_IMAGE}
           imagePullPolicy: IfNotPresent
-          resources:
-            requests:
-              memory: 50Mi
-              cpu: 10m
           args:
             - --v=${LOG_LEVEL}
             - "--nodeid=$(NODE_ID)"
@@ -83,10 +79,6 @@ spec:
             privileged: true
           image: ${NODE_DRIVER_REGISTRAR_IMAGE}
           imagePullPolicy: IfNotPresent
-          resources:
-            requests:
-              memory: 20Mi
-              cpu: 5m
           args:
             - --v=${LOG_LEVEL}
             - --csi-address=/csi/csi.sock
