@@ -103,6 +103,7 @@ spec:
           args:
             - --v=${LOG_LEVEL}
             - --csi-address=/csi/csi.sock
+            - "--http-endpoint=:10307"
             - --kubelet-registration-path=/var/lib/kubelet/plugins/manila.csi.openstack.org/csi.sock
           lifecycle:
             preStop:
@@ -118,11 +119,22 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
+          ports:
+            - containerPort: 10307
+              name: rhealthz
           resources:
             requests:
               cpu: 5m
               memory: 20Mi
           terminationMessagePolicy: FallbackToLogsOnError
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: rhealthz
+            initialDelaySeconds: 10
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 5
         - name: csi-liveness-probe
           image: ${LIVENESS_PROBE_IMAGE}
           imagePullPolicy: IfNotPresent
