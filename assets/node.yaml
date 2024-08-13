@@ -73,6 +73,19 @@ spec:
               mountPath: /etc/selinux
             - name: sys-fs
               mountPath: /sys/fs
+          ports:
+            - name: healthz
+              # Due to hostNetwork, this port is open on all nodes!
+              containerPort: 10305
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 30
+            failureThreshold: 5
           resources:
             requests:
               cpu: 10m
@@ -110,6 +123,22 @@ spec:
               cpu: 5m
               memory: 20Mi
           terminationMessagePolicy: FallbackToLogsOnError
+        - name: csi-liveness-probe
+          image: ${LIVENESS_PROBE_IMAGE}
+          imagePullPolicy: IfNotPresent
+          args:
+            - --csi-address=/csi/csi.sock
+            - --probe-timeout=10s
+            - --health-port=10305
+            - --v=${LOG_LEVEL}
+          terminationMessagePolicy: FallbackToLogsOnError
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
       volumes:
         - name: registration-dir
           hostPath:
