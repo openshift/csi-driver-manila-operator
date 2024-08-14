@@ -49,10 +49,6 @@ spec:
         - name: csi-driver
           image: ${DRIVER_IMAGE}
           imagePullPolicy: IfNotPresent
-          resources:
-            requests:
-              memory: 50Mi
-              cpu: 10m
           args:
             - --v=${LOG_LEVEL}
             - --cluster-id=${CLUSTER_ID}
@@ -88,10 +84,6 @@ spec:
         - name: csi-driver-nfs
           image: ${NFS_DRIVER_IMAGE}
           imagePullPolicy: IfNotPresent
-          resources:
-            requests:
-              memory: 20Mi
-              cpu: 5m
           args:
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=unix://plugin/csi-nfs.sock"
@@ -112,10 +104,6 @@ spec:
         - name: csi-provisioner
           image: ${PROVISIONER_IMAGE}
           imagePullPolicy: IfNotPresent
-          resources:
-            requests:
-              memory: 50Mi
-              cpu: 10m
           args:
             - --csi-address=$(ADDRESS)
             - --feature-gates=Topology=true
@@ -165,10 +153,6 @@ spec:
         - name: csi-snapshotter
           image: ${SNAPSHOTTER_IMAGE}
           imagePullPolicy: IfNotPresent
-          resources:
-            requests:
-              memory: 50Mi
-              cpu: 10m
           args:
             - --csi-address=$(ADDRESS)
             - --metrics-address=localhost:8203
