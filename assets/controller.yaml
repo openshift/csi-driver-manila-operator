@@ -70,6 +70,19 @@ spec:
               value: NFS
             - name: FWD_CSI_ENDPOINT
               value: unix:///plugin/csi-nfs.sock
+          ports:
+            - name: healthz
+              # Due to hostNetwork, this port is open on a node!
+              containerPort: 10306
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 30
+            failureThreshold: 5
           volumeMounts:
             - name: socket-dir
               mountPath: /plugin
@@ -195,6 +208,22 @@ spec:
           volumeMounts:
           - mountPath: /etc/tls/private
             name: metrics-serving-cert
+        - name: csi-liveness-probe
+          image: ${LIVENESS_PROBE_IMAGE}
+          imagePullPolicy: IfNotPresent
+          args:
+            - --csi-address=/csi/csi.sock
+            - --probe-timeout=10s
+            - --health-port=10306
+            - --v=${LOG_LEVEL}
+          terminationMessagePolicy: FallbackToLogsOnError
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
       volumes:
         - name: socket-dir
           emptyDir: {}

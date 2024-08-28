@@ -69,6 +69,19 @@ spec:
               mountPath: /etc/selinux
             - name: sys-fs
               mountPath: /sys/fs
+          ports:
+            - name: healthz
+              # Due to hostNetwork, this port is open on all nodes!
+              containerPort: 10305
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 30
+            failureThreshold: 5
           resources:
             requests:
               cpu: 10m
@@ -82,6 +95,7 @@ spec:
           args:
             - --v=${LOG_LEVEL}
             - --csi-address=/csi/csi.sock
+            - "--http-endpoint=:10307"
             - --kubelet-registration-path=/var/lib/kubelet/plugins/manila.csi.openstack.org/csi.sock
           lifecycle:
             preStop:
@@ -97,11 +111,38 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
+          ports:
+            - containerPort: 10307
+              name: rhealthz
           resources:
             requests:
               cpu: 5m
               memory: 20Mi
           terminationMessagePolicy: FallbackToLogsOnError
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: rhealthz
+            initialDelaySeconds: 10
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 5
+        - name: csi-liveness-probe
+          image: ${LIVENESS_PROBE_IMAGE}
+          imagePullPolicy: IfNotPresent
+          args:
+            - --csi-address=/csi/csi.sock
+            - --probe-timeout=10s
+            - --health-port=10305
+            - --v=${LOG_LEVEL}
+          terminationMessagePolicy: FallbackToLogsOnError
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 10m
       volumes:
         - name: registration-dir
           hostPath:
