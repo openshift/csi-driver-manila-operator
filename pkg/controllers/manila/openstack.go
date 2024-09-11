@@ -1,6 +1,7 @@
 package manila
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -9,10 +10,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
-	"github.com/gophercloud/utils/openstack/clientconfig"
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack"
+	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharetypes"
+	"github.com/gophercloud/utils/v2/openstack/clientconfig"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
 	"github.com/openshift/csi-driver-manila-operator/pkg/version"
 	"sigs.k8s.io/yaml"
@@ -81,7 +82,7 @@ func (o *openStackClient) GetShareTypes() ([]sharetypes.ShareType, error) {
 
 	provider.HTTPClient.Timeout = 120 * time.Second
 
-	err = openstack.Authenticate(provider, *opts)
+	err = openstack.Authenticate(context.TODO(), provider, *opts)
 	if err != nil {
 		return nil, fmt.Errorf("cannot authenticate with given credentials: %w", err)
 	}
@@ -93,7 +94,7 @@ func (o *openStackClient) GetShareTypes() ([]sharetypes.ShareType, error) {
 		return nil, fmt.Errorf("cannot find an endpoint for Shared File Systems API v2: %w", err)
 	}
 
-	allPages, err := sharetypes.List(client, &sharetypes.ListOpts{}).AllPages()
+	allPages, err := sharetypes.List(client, &sharetypes.ListOpts{}).AllPages(context.TODO())
 	if err != nil {
 		return nil, fmt.Errorf("cannot list available share types: %w", err)
 	}
