@@ -1,3 +1,9 @@
+> [!warning]
+> **This repo is obsolete in OCP 4.18.**
+> OpenStack Manila CSI driver operator in 4.18 and newer is built from https://github.com/openshift/csi-operator.
+> 4.17 and older branches in this repo are still in use, until EOL of the corresponding OCP version.
+> See [this enhancement](https://github.com/openshift/enhancements/blob/master/enhancements/storage/csi-driver-operator-merge.md) for details.
+
 # Manila CSI driver operator
 
 An operator to deploy the [Manila CSI driver](https://github.com/openshift/cloud-provider-openstack/tree/master/pkg/csi/manila) in OpenShift.
