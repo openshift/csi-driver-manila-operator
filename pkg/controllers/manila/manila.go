@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/sharetypes"
+	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharetypes"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/openshift/csi-driver-manila-operator/assets"
 	"github.com/openshift/csi-driver-manila-operator/pkg/util"
