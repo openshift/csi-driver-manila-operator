@@ -92,6 +92,8 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          securityContext:
+            readOnlyRootFilesystem: true
           terminationMessagePolicy: FallbackToLogsOnError
         # TODO: fix manila CSI driver not to require NFS driver socket!
         - name: csi-driver-nfs
@@ -113,6 +115,8 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          securityContext:
+            readOnlyRootFilesystem: true
           terminationMessagePolicy: FallbackToLogsOnError
         - name: csi-provisioner
           image: ${PROVISIONER_IMAGE}
@@ -137,6 +141,8 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          securityContext:
+            readOnlyRootFilesystem: true
           terminationMessagePolicy: FallbackToLogsOnError
           # kube-rbac-proxy for external-provisioner container.
           # Provides https proxy for http-based external-provisioner metrics.
@@ -159,6 +165,8 @@ spec:
             requests:
               memory: 20Mi
               cpu: 10m
+          securityContext:
+            readOnlyRootFilesystem: true
           terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
           - mountPath: /etc/tls/private
@@ -184,6 +192,8 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          securityContext:
+            readOnlyRootFilesystem: true
           terminationMessagePolicy: FallbackToLogsOnError
         - name: snapshotter-kube-rbac-proxy
           args:
@@ -204,6 +214,8 @@ spec:
             requests:
               memory: 20Mi
               cpu: 10m
+          securityContext:
+            readOnlyRootFilesystem: true
           terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
           - mountPath: /etc/tls/private
@@ -224,6 +236,8 @@ spec:
             requests:
               memory: 50Mi
               cpu: 10m
+          securityContext:
+            readOnlyRootFilesystem: true
       volumes:
         - name: socket-dir
           emptyDir: {}
