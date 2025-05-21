@@ -1,14 +1,14 @@
 approvers:
-  - EmilienM
+  - RomanBednar
   - bertinatto
-  - gnufied
+  - dkokkino
   - dobsonj
+  - gnufied
+  - gryf
   - jsafrane
   - mandre
-  - mdbooth
+  - mpatlasov
   - pierreprinetti
   - stephenfin
   - tsmetana
-  - RomanBednar
-  - mpatlasov
 component: "Storage / Operators"
